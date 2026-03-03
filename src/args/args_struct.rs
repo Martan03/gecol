@@ -1,14 +1,14 @@
-use std::path::PathBuf;
-
 use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 
-use crate::error::Error;
+use crate::{
+    args::{action::Action, extract::Extract},
+    error::Error,
+};
 
 #[derive(Debug, Clone, Default)]
 pub struct Args {
-    pub img: Option<PathBuf>,
-    pub config: Option<PathBuf>,
+    pub action: Option<Action>,
     pub should_quit: bool,
 }
 
@@ -22,8 +22,11 @@ impl Args {
         let mut parsed = Self::default();
         while let Some(arg) = args.next() {
             match arg {
-                "-i" | "--image" => parsed.img = args.next_arg()?,
-                "-c" | "--config" => parsed.config = args.next_arg()?,
+                "run" => {
+                    let extract = Extract::parse(&mut args)?;
+                    parsed.action = Some(Action::Extract(extract));
+                }
+                "config" => parsed.action = Some(Action::Config),
                 "-v" | "--version" => {
                     parsed.should_quit = true;
                     println!("gecol {}", Self::VERSION_NUMBER)
@@ -32,18 +35,18 @@ impl Args {
                     parsed.should_quit = true;
                     Self::help();
                 }
-                _ => return Self::unknown_arg(&arg),
+                _ => return Err(Self::unknown_arg(&arg)),
             }
         }
         Ok(parsed)
     }
 
-    fn unknown_arg(arg: &str) -> Result<Self, Error> {
-        Err(Error::Pareg(ArgError::from_msg(
+    pub fn unknown_arg(arg: &str) -> Error {
+        Error::Pareg(ArgError::from_msg(
             ArgErrKind::UnknownArgument,
             "invalid argument",
             arg,
-        )))
+        ))
     }
 
     pub fn help() {
@@ -60,6 +63,9 @@ A perception-aware accent color extractor.
 {'g}Flags{'_}:
   {'y}-i  --image{'_}
     Image to extract the color from.
+
+  {'y}-c  --config{'_}
+    Specifies custom config path.
 
   {'y}-h  --help{'_}
     Displays this help.
