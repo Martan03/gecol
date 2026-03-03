@@ -14,12 +14,16 @@ pub struct Config {
     pub res_w: Option<u32>,
     #[serde(rename = "resize_height", default = "default_resize")]
     pub res_h: Option<u32>,
-    #[serde(rename = "saturation_threshold", default)]
+    #[serde(rename = "saturation_threshold", default = "default_sat_thresh")]
     pub sat_thresh: f32,
-    #[serde(rename = "value_threshold", default)]
+    #[serde(rename = "value_threshold", default = "default_val_thresh")]
     pub val_thresh: f32,
     #[serde(rename = "saliency_threshold", default)]
     pub sal_thresh: f32,
+    #[serde(rename = "saliency_bonus", default = "default_sal_bonus")]
+    pub sal_bonus: f32,
+    #[serde(default = "default_warmth_bonus")]
+    pub warmth_bonus: f32,
 }
 
 impl Config {
@@ -58,13 +62,31 @@ impl Default for Config {
         Self {
             res_w: default_resize(),
             res_h: default_resize(),
-            sat_thresh: Default::default(),
-            val_thresh: Default::default(),
+            sat_thresh: default_sat_thresh(),
+            val_thresh: default_val_thresh(),
             sal_thresh: Default::default(),
+            sal_bonus: default_sal_bonus(),
+            warmth_bonus: default_warmth_bonus(),
         }
     }
 }
 
 fn default_resize() -> Option<u32> {
-    Some(256)
+    Some(255)
+}
+
+fn default_sat_thresh() -> f32 {
+    0.2
+}
+
+fn default_val_thresh() -> f32 {
+    0.15
+}
+
+fn default_sal_bonus() -> f32 {
+    5.
+}
+
+fn default_warmth_bonus() -> f32 {
+    1.5
 }

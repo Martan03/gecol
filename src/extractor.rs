@@ -34,6 +34,9 @@ impl<'a> Extractor<'a> {
         let img = extractor.prep_img(img);
 
         let (sal_map, is_sal_worth) = extractor.gen_saliency(&img);
+        #[cfg(debug_assertions)]
+        extractor.save_saliency(&sal_map);
+
         let rgb_img = img.to_rgb8();
 
         Ok(extractor.find_best_col(&rgb_img, &sal_map, is_sal_worth))
@@ -49,7 +52,7 @@ impl<'a> Extractor<'a> {
         if tw == img.width() && th == img.height() {
             return img;
         }
-        img.resize_exact(tw, th, FilterType::Nearest)
+        img.resize_exact(tw, th, FilterType::Triangle)
     }
 
     /// Generates the normalized u8 saliency map
@@ -99,8 +102,12 @@ impl<'a> Extractor<'a> {
             if is_worth {
                 let id = y as usize * self.width + x as usize;
                 let sal_val = sal_map[id] as f32 / 255.;
-                score *= 1.0 + (sal_val * 5.0);
+                score *= 1.0 + sal_val * self.config.sal_bonus;
             }
+
+            let hue = hsv.hue.into_positive_degrees();
+            let warmth = 1.0 - (hue.min(360. - hue) / 180.);
+            score *= 1.0 + warmth * self.config.warmth_bonus;
 
             if score > max_score {
                 max_score = score;
@@ -108,5 +115,18 @@ impl<'a> Extractor<'a> {
             }
         }
         best_col
+    }
+
+    #[cfg(debug_assertions)]
+    fn save_saliency(&self, sal_img: &Vec<u8>) {
+        if let Some(img) = image::GrayImage::from_raw(
+            self.width as u32,
+            self.height as u32,
+            sal_img.clone(),
+        ) {
+            img.save("debug_saliency.png")
+                .expect("Failed to save debug image");
+            println!("Saved debug_saliency.png to current directory.");
+        }
     }
 }
