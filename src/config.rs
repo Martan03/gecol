@@ -10,16 +10,16 @@ use crate::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    #[serde(default = "default_resize")]
-    pub resize_width: Option<u32>,
-    #[serde(default = "default_resize")]
-    pub resize_height: Option<u32>,
-    #[serde(default)]
-    pub sat_threshold: f32,
-    #[serde(default)]
-    pub val_threshold: f32,
-    #[serde(default)]
-    pub sal_threshold: f32,
+    #[serde(rename = "resize_width", default = "default_resize")]
+    pub res_w: Option<u32>,
+    #[serde(rename = "resize_height", default = "default_resize")]
+    pub res_h: Option<u32>,
+    #[serde(rename = "saturation_threshold", default)]
+    pub sat_thresh: f32,
+    #[serde(rename = "value_threshold", default)]
+    pub val_thresh: f32,
+    #[serde(rename = "saliency_threshold", default)]
+    pub sal_thresh: f32,
 }
 
 impl Config {
@@ -56,19 +56,15 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            resize_width: default_resize(),
-            resize_height: default_resize(),
-            sat_threshold: Default::default(),
-            val_threshold: Default::default(),
-            sal_threshold: default_sal_threshold(),
+            res_w: default_resize(),
+            res_h: default_resize(),
+            sat_thresh: Default::default(),
+            val_thresh: Default::default(),
+            sal_thresh: Default::default(),
         }
     }
 }
 
 fn default_resize() -> Option<u32> {
     Some(256)
-}
-
-fn default_sal_threshold() -> f32 {
-    20.
 }

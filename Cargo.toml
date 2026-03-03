@@ -9,6 +9,8 @@ image = "0.25.9"
 imgref = "1.12.0"
 mss_saliency = "1.1.0"
 palette = "0.7.6"
+pareg = "0.12.0"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+termal = "4.2.1"
 thiserror = "2.0.18"

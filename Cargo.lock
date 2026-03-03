@@ -123,6 +123,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "base64"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
 name = "bit_field"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -196,6 +202,15 @@ name = "color_quant"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d7b894f5411737b7867f4827955924d7c254fc9f4d91a6aad6b097804b1018b"
+
+[[package]]
+name = "convert_case"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "baaaa0ecca5b51987b9423ccdc971514dd8b0bb7b4060b983d3664dad3f1f89f"
+dependencies = [
+ "unicode-segmentation",
+]
 
 [[package]]
 name = "core2"
@@ -368,8 +383,10 @@ dependencies = [
  "imgref",
  "mss_saliency",
  "palette",
+ "pareg",
  "serde",
  "serde_json",
+ "termal",
  "thiserror",
 ]
 
@@ -525,6 +542,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "litrs"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e4cf394bcd88ba72eb3b2862e21ef6458b0e1586654e213b0176e667bb9d19e"
+dependencies = [
+ "proc-macro2",
+]
+
+[[package]]
+name = "litrs"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11d3d7f243d5c5a8b9bb5d6dd2b1602c0cb0b9db1621bafc7ed66e35ff9fe092"
+dependencies = [
+ "proc-macro2",
+]
+
+[[package]]
 name = "log"
 version = "0.4.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -556,6 +591,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
+name = "minimal-lexical"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -564,6 +605,12 @@ dependencies = [
  "adler2",
  "simd-adler32",
 ]
+
+[[package]]
+name = "minlin"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6015182c46495fbe1e875e03e0bc6660ee6614047026cf79c0067bbfaa7ace51"
 
 [[package]]
 name = "moxcms"
@@ -694,6 +741,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "pareg"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "450b031fa6090fde38b311a82074e1a3053fdf8c8444fe3d6915f63cf95a51d9"
+dependencies = [
+ "pareg_core",
+ "pareg_proc",
+]
+
+[[package]]
+name = "pareg_core"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cda020a8d3dc108c7350aeab46d67453472c7c8893f458be64d8fbe6c829b89e"
+dependencies = [
+ "minimal-lexical",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "termal",
+ "thiserror",
+]
+
+[[package]]
+name = "pareg_proc"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e0e0f1cc461a19f435437932df9f6acff6f8022c6b481d3bfdc8679eb6ae5c7"
+dependencies = [
+ "pareg_core",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -745,6 +825,36 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
 dependencies = [
  "siphasher",
+]
+
+[[package]]
+name = "place_macro"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7184a838ea957f4354ee4087632287e6422fae12206bf7375a7774a904cf503e"
+dependencies = [
+ "place_macro_proc",
+]
+
+[[package]]
+name = "place_macro_core"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47bab9e5b5e3d59dcb49b5e8249a52127ac631980c35d20163c7b755abeec2d0"
+dependencies = [
+ "convert_case",
+ "litrs 0.5.1",
+ "proc-macro2",
+]
+
+[[package]]
+name = "place_macro_proc"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b40c6f0f1f18e9ef6334fafeaf1579c88b4cfe2dda26215c1251f9af325dbf5c"
+dependencies = [
+ "place_macro_core",
+ "proc-macro2",
 ]
 
 [[package]]
@@ -1073,6 +1183,39 @@ dependencies = [
 ]
 
 [[package]]
+name = "termal"
+version = "4.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e91e75933be6651d6945ffe998215db5562f2b40e65071149a184d93ad5484b5"
+dependencies = [
+ "termal_core",
+ "termal_proc",
+]
+
+[[package]]
+name = "termal_core"
+version = "4.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a766a6fe27d8a55afd9db7201c14c65712843ce74b9683cec2fa6e2e72805e0"
+dependencies = [
+ "base64",
+ "litrs 1.0.0",
+ "minlin",
+ "place_macro",
+ "proc-macro2",
+ "thiserror",
+]
+
+[[package]]
+name = "termal_proc"
+version = "4.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aeefcc81ae1a51bcd9b7a027420c6504a2dd8b0688743b34cea81007bc8a165"
+dependencies = [
+ "termal_core",
+]
+
+[[package]]
 name = "thiserror"
 version = "2.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1111,6 +1254,12 @@ name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+
+[[package]]
+name = "unicode-segmentation"
+version = "1.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6ccf251212114b54433ec949fd6a7841275f9ada20dddd2f29e9ceea4501493"
 
 [[package]]
 name = "v_frame"

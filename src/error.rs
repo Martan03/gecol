@@ -8,6 +8,8 @@ pub enum Error {
     Img(#[from] image::ImageError),
     #[error(transparent)]
     Json(#[from] serde_json::Error),
+    #[error(transparent)]
+    Pareg(#[from] pareg::ArgError),
     #[error("{0}")]
     Msg(String),
 }

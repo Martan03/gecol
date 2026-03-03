@@ -33,7 +33,7 @@ impl<'a> Extractor<'a> {
         let img = image::open(path)?;
         let img = extractor.prep_img(img);
 
-        let (sal_map, is_sal_worth) = extractor.gen_salience(&img);
+        let (sal_map, is_sal_worth) = extractor.gen_saliency(&img);
         let rgb_img = img.to_rgb8();
 
         Ok(extractor.find_best_col(&rgb_img, &sal_map, is_sal_worth))
@@ -41,8 +41,8 @@ impl<'a> Extractor<'a> {
 
     /// Resizes the image only if new dimensions are provided.
     fn prep_img(&mut self, img: DynamicImage) -> DynamicImage {
-        let tw = self.config.resize_width.unwrap_or(img.width());
-        let th = self.config.resize_height.unwrap_or(img.height());
+        let tw = self.config.res_w.unwrap_or(img.width());
+        let th = self.config.res_h.unwrap_or(img.height());
         self.width = tw as usize;
         self.height = th as usize;
 
@@ -53,7 +53,7 @@ impl<'a> Extractor<'a> {
     }
 
     /// Generates the normalized u8 saliency map
-    fn gen_salience(&self, img: &DynamicImage) -> (Vec<u8>, bool) {
+    fn gen_saliency(&self, img: &DynamicImage) -> (Vec<u8>, bool) {
         let luma = img.to_luma8();
         let luma_img =
             Img::new(luma.as_raw().as_slice(), self.width, self.height);
@@ -68,7 +68,7 @@ impl<'a> Extractor<'a> {
 
         let total_sal: u32 = sal_map.iter().map(|&p| p as u32).sum();
         let avg_sal = total_sal as f32 / (self.width * self.height) as f32;
-        let is_sal_worth = avg_sal >= self.config.sal_threshold;
+        let is_sal_worth = avg_sal >= self.config.sal_thresh;
 
         (sal_map, is_sal_worth)
     }
@@ -89,8 +89,8 @@ impl<'a> Extractor<'a> {
             let b = pixel[2] as f32 / 255.;
 
             let hsv = Hsv::from_color(Srgb::new(r, g, b));
-            if hsv.value < self.config.val_threshold
-                || hsv.saturation < self.config.sat_threshold
+            if hsv.value < self.config.val_thresh
+                || hsv.saturation < self.config.sat_thresh
             {
                 continue;
             }
