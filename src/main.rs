@@ -4,19 +4,21 @@ use std::{
 };
 
 use pareg::Pareg;
-use termal::{eprintcln, printc, printcln};
+use termal::eprintcln;
 
 use crate::{
     args::{action::Action, args_struct::Args, extract::Extract},
     config::Config,
     error::Error,
     extract::extractor::Extractor,
+    theme::Theme,
 };
 
 pub mod args;
 pub mod config;
 pub mod error;
 pub mod extract;
+pub mod theme;
 
 fn main() -> ExitCode {
     match run() {
@@ -52,12 +54,13 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
     };
 
     match Extractor::extract(img, &config)? {
-        Some((r, g, b)) => {
-            printc!("Detected color: {'bold}#{r:02x}{g:02x}{b:02x}{'_bold} ");
-            printcln!("\x1b[48;2;{r};{g};{b}m  \x1b[0m");
+        Some(rgb) => {
+            let theme = Theme::dark(rgb);
+            println!("{theme}");
         }
         None => println!("No accent color detected..."),
     }
+
     Ok(())
 }
 
