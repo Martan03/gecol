@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use palette::{IntoColor, OklabHue, Oklch, Srgb};
+use serde::{Deserialize, Serialize};
 
 /// Color representation using oklch color format.
 ///
@@ -17,7 +18,7 @@ use palette::{IntoColor, OklabHue, Oklch, Srgb};
 /// let lighter_color = color.lighten(0.2);
 /// let darker_color = color.darken(0.3);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Color(pub Oklch);
 
 impl Color {

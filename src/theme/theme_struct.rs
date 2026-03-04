@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
 use palette::{IntoColor, Oklch, Srgb};
+use serde::{Deserialize, Serialize};
 
 use crate::theme::Color;
 
@@ -17,7 +18,7 @@ use crate::theme::Color;
 /// // Generates dark theme
 /// let theme = Theme::dark((155, 155, 0));
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Theme {
     pub primary: Color,
     pub secondary: Color,
