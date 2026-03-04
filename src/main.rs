@@ -10,13 +10,13 @@ use crate::{
     args::{action::Action, args_struct::Args, extract::Extract},
     config::Config,
     error::Error,
-    extractor::Extractor,
+    extract::extractor::Extractor,
 };
 
 pub mod args;
 pub mod config;
 pub mod error;
-pub mod extractor;
+pub mod extract;
 
 fn main() -> ExitCode {
     match run() {

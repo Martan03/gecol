@@ -2,10 +2,15 @@ use std::path::Path;
 
 use image::{DynamicImage, RgbImage, imageops::FilterType};
 use imgref::Img;
+use kmeans_colors::get_kmeans;
 use mss_saliency::maximum_symmetric_surround_saliency;
-use palette::{FromColor, Hsv, Srgb};
+use palette::{FromColor, Hsv, IntoColor, Lab, Srgb};
 
-use crate::{config::Config, error::Error};
+use crate::{
+    config::Config,
+    error::Error,
+    extract::scores::{ScoredCluster, ScoredPixel},
+};
 
 #[derive(Debug, Clone)]
 pub struct Extractor<'a> {
@@ -39,7 +44,9 @@ impl<'a> Extractor<'a> {
 
         let rgb_img = img.to_rgb8();
 
-        Ok(extractor.find_best_col(&rgb_img, &sal_map, is_sal_worth))
+        let candidates =
+            extractor.get_candidates(&rgb_img, &sal_map, is_sal_worth);
+        Ok(extractor.get_best_col(candidates))
     }
 
     /// Resizes the image only if new dimensions are provided.
@@ -77,21 +84,21 @@ impl<'a> Extractor<'a> {
     }
 
     /// Finds the best color based on saliency and HSV.
-    fn find_best_col(
+    fn get_candidates(
         &self,
         rgb_img: &RgbImage,
         sal_map: &[u8],
         is_worth: bool,
-    ) -> Option<(u8, u8, u8)> {
-        let mut best_col = None;
-        let mut max_score = 0.0;
+    ) -> Vec<ScoredPixel> {
+        let mut candidates = Vec::new();
 
         for (x, y, pixel) in rgb_img.enumerate_pixels() {
             let r = pixel[0] as f32 / 255.;
             let g = pixel[1] as f32 / 255.;
             let b = pixel[2] as f32 / 255.;
 
-            let hsv = Hsv::from_color(Srgb::new(r, g, b));
+            let srgb = Srgb::new(r, g, b);
+            let hsv = Hsv::from_color(srgb);
             if hsv.value < self.config.val_thresh
                 || hsv.saturation < self.config.sat_thresh
             {
@@ -109,12 +116,43 @@ impl<'a> Extractor<'a> {
             let warmth = 1.0 - (hue.min(360. - hue) / 180.);
             score *= 1.0 + warmth * self.config.warmth_bonus;
 
-            if score > max_score {
-                max_score = score;
-                best_col = Some((pixel[0], pixel[1], pixel[2]));
+            let lab: Lab = srgb.into_color();
+            candidates.push(ScoredPixel::new(lab, pixel, score));
+        }
+        candidates
+    }
+
+    fn get_best_col(&self, candids: Vec<ScoredPixel>) -> Option<(u8, u8, u8)> {
+        let clusters = self.get_clusters(candids);
+        let min_size = ((self.width * self.height) as f32 * 0.001) as usize;
+
+        let mut best = None;
+        let mut max_score = -1.;
+        for cluster in clusters {
+            if cluster.cnt < min_size {
+                continue;
+            }
+
+            let avg_score = cluster.score / cluster.cnt as f32;
+            if avg_score > max_score {
+                max_score = avg_score;
+                best = Some(cluster.best_rgb);
             }
         }
-        best_col
+        best
+    }
+
+    fn get_clusters(&self, candids: Vec<ScoredPixel>) -> Vec<ScoredCluster> {
+        let labs: Vec<Lab> = candids.iter().map(|c| c.lab).collect();
+        let k = self.config.clusters.min(labs.len());
+
+        let res = get_kmeans(k, 20, 10.0, false, &labs, 0);
+
+        let mut clusters = vec![ScoredCluster::default(); k];
+        for (i, &cid) in res.indices.iter().enumerate() {
+            clusters[cid as usize].push(&candids[i]);
+        }
+        clusters
     }
 
     #[cfg(debug_assertions)]

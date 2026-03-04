@@ -24,6 +24,8 @@ pub struct Config {
     pub sal_bonus: f32,
     #[serde(default = "default_warmth_bonus")]
     pub warmth_bonus: f32,
+    #[serde(default = "default_clusters")]
+    pub clusters: usize,
 }
 
 impl Config {
@@ -67,6 +69,7 @@ impl Default for Config {
             sal_thresh: Default::default(),
             sal_bonus: default_sal_bonus(),
             warmth_bonus: default_warmth_bonus(),
+            clusters: default_clusters(),
         }
     }
 }
@@ -89,4 +92,8 @@ fn default_sal_bonus() -> f32 {
 
 fn default_warmth_bonus() -> f32 {
     1.5
+}
+
+fn default_clusters() -> usize {
+    16
 }
