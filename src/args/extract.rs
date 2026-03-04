@@ -18,7 +18,7 @@ impl Extract {
                 "-i" | "--image" => parsed.img = args.next_arg()?,
                 "-c" | "--config" => parsed.config = args.next_arg()?,
                 "--" => break,
-                _ => return Err(Args::unknown_arg(&arg)),
+                _ => return Err(Args::unknown_arg(arg)),
             }
         }
         Ok(parsed)

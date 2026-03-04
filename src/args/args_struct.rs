@@ -35,7 +35,7 @@ impl Args {
                     parsed.should_quit = true;
                     Self::help();
                 }
-                _ => return Err(Self::unknown_arg(&arg)),
+                _ => return Err(Self::unknown_arg(arg)),
             }
         }
         Ok(parsed)

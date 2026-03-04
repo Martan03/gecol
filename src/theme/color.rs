@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use palette::{IntoColor, Oklch, Srgb};
+use palette::{IntoColor, OklabHue, Oklch, Srgb};
 
 /// Color representation using oklch color format.
 ///
@@ -8,6 +8,7 @@ use palette::{IntoColor, Oklch, Srgb};
 /// color manipulation, such as lightening and darkening the color.
 ///
 /// # Example
+///
 /// ```rust
 /// use geocol::theme::Color;
 ///
@@ -20,6 +21,21 @@ use palette::{IntoColor, Oklch, Srgb};
 pub struct Color(pub Oklch);
 
 impl Color {
+    /// Gets the lighness component of the oklch color.
+    pub fn l(&self) -> f32 {
+        self.0.l
+    }
+
+    /// Gets the chroma component of the oklch color.
+    pub fn chroma(&self) -> f32 {
+        self.0.chroma
+    }
+
+    /// Gets the hue component of the oklch color.
+    pub fn hue(&self) -> OklabHue<f32> {
+        self.0.hue
+    }
+
     /// Converts given RGB components to the [`Color`] represented using
     /// [`Oklch`](palette::Oklch) color format
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {

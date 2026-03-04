@@ -156,11 +156,11 @@ impl<'a> Extractor<'a> {
     }
 
     #[cfg(debug_assertions)]
-    fn save_saliency(&self, sal_img: &Vec<u8>) {
+    fn save_saliency(&self, sal_img: &[u8]) {
         if let Some(img) = image::GrayImage::from_raw(
             self.width as u32,
             self.height as u32,
-            sal_img.clone(),
+            sal_img.to_owned(),
         ) {
             img.save("debug_saliency.png")
                 .expect("Failed to save debug image");
