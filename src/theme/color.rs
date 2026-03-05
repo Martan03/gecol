@@ -45,6 +45,15 @@ impl Color {
         Self(srgb.into_color())
     }
 
+    pub fn to_rgb(&self) -> (u8, u8, u8) {
+        let value: Srgb = self.0.into_color();
+        (
+            f32_to_u8(value.red),
+            f32_to_u8(value.green),
+            f32_to_u8(value.blue),
+        )
+    }
+
     /// Lightens the color by adding a value to it.
     ///
     /// It adds `amount` (e.g. 0.1 for a 10% shift) to the current lightness
@@ -86,13 +95,13 @@ impl Color {
     }
 }
 
+fn f32_to_u8(value: f32) -> u8 {
+    (value.clamp(0., 1.) * 255.).round() as u8
+}
+
 impl Display for Color {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let srgb: Srgb = self.0.into_color();
-
-        let r = (srgb.red.clamp(0.0, 1.0) * 255.0).round() as u8;
-        let g = (srgb.green.clamp(0.0, 1.0) * 255.0).round() as u8;
-        let b = (srgb.blue.clamp(0.0, 1.0) * 255.0).round() as u8;
+        let (r, g, b) = self.to_rgb();
         write!(f, "\x1b[48;2;{r};{g};{b}m",)
     }
 }

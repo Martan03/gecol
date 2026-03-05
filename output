@@ -1,0 +1,15 @@
+foreground           
+background           #130807
+selection_foreground 
+selection_background 
+
+# URL underline color
+url_color            
+
+# Cursor
+cursor               
+cursor_text_color    
+
+# Borders
+active_border_color   
+inactive_border_color 

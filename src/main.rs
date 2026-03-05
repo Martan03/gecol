@@ -11,6 +11,7 @@ use crate::{
     config::Config,
     error::Error,
     extract::extractor::Extractor,
+    template::template::Template,
     theme::Theme,
 };
 
@@ -18,6 +19,7 @@ pub mod args;
 pub mod config;
 pub mod error;
 pub mod extract;
+pub mod template;
 pub mod theme;
 
 fn main() -> ExitCode {
@@ -57,6 +59,9 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
         Some(rgb) => {
             let theme = Theme::dark(rgb);
             println!("{theme}");
+
+            let template = Template::new("test", "output");
+            template.build(&theme)?;
         }
         None => println!("No accent color detected..."),
     }
