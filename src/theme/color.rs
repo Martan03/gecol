@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 /// let lighter_color = color.lighten(0.2);
 /// let darker_color = color.darken(0.3);
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Color(pub Oklch);
 
 impl Color {
@@ -91,6 +91,20 @@ impl Color {
     pub fn dim(&self, amount: f32) -> Self {
         let mut color = self.0;
         color.l = (color.l * (1.0 - amount)).clamp(0., 1.0);
+        Self(color)
+    }
+
+    /// Increases the saturation (chroma component) of the color.
+    pub fn saturate(&self, amount: f32) -> Self {
+        let mut color = self.0;
+        color.chroma = (color.chroma + amount).max(0.);
+        Self(color)
+    }
+
+    /// Descreases the saturation (chroma component) of the color.
+    pub fn desaturate(&self, amount: f32) -> Self {
+        let mut color = self.0;
+        color.chroma = (color.chroma - amount).max(0.);
         Self(color)
     }
 }

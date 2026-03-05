@@ -1,12 +1,9 @@
 use std::path::Path;
 
-use minijinja::{Environment, value::ViaDeserialize};
+use minijinja::{Environment, Value, context};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::Error,
-    theme::{Color, Theme},
-};
+use crate::{error::Error, theme::Theme};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Template<P1, P2>
@@ -35,15 +32,22 @@ where
 
         let mut env = Environment::new();
 
-        fn hex(color: ViaDeserialize<Color>) -> String {
-            color.0.hex()
-        }
-        env.add_filter("hex", hex);
-
         env.add_template("template", &content)?;
 
         let template = env.get_template("template")?;
-        let built = template.render(&theme)?;
+        let ctx = context! {
+            primary => Value::from_object(theme.primary),
+            secondary => Value::from_object(theme.secondary),
+            background => Value::from_object(theme.background),
+            surface => Value::from_object(theme.surface),
+            border => Value::from_object(theme.border),
+            foreground => Value::from_object(theme.foreground),
+            muted => Value::from_object(theme.muted),
+            success => Value::from_object(theme.success),
+            warning => Value::from_object(theme.warning),
+            error => Value::from_object(theme.error),
+        };
+        let built = template.render(ctx)?;
 
         std::fs::write(&self.target, built)?;
         Ok(())

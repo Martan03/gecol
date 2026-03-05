@@ -60,7 +60,7 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
             let theme = Theme::dark(rgb);
             println!("{theme}");
 
-            let template = Template::new("test", "output");
+            let template = Template::new("test.template", "output.template");
             template.build(&theme)?;
         }
         None => println!("No accent color detected..."),
