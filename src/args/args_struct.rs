@@ -2,7 +2,7 @@ use gecol::error::Error;
 use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 
-use crate::args::{action::Action, extract::Extract};
+use crate::args::{action::Action, config::Config, extract::Extract};
 
 #[derive(Debug, Clone, Default)]
 pub struct Args {
@@ -24,7 +24,10 @@ impl Args {
                     let extract = Extract::parse(&mut args)?;
                     parsed.action = Some(Action::Extract(extract));
                 }
-                "config" => parsed.action = Some(Action::Config),
+                "config" => {
+                    let config = Config::parse(&mut args)?;
+                    parsed.action = Some(Action::Config(config));
+                }
                 "-v" | "--version" => {
                     parsed.should_quit = true;
                     println!("gecol {}", Self::VERSION_NUMBER)

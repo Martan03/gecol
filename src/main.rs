@@ -4,8 +4,8 @@ use std::{
 };
 
 use gecol::{
-    config::Config, error::Error, extract::Extractor, template::Template,
-    theme::Theme,
+    config::Config, error::Error, extract::Extractor,
+    template::build_templates, theme::Theme,
 };
 use pareg::Pareg;
 use termal::eprintcln;
@@ -27,8 +27,8 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Error> {
     let args = Args::parse(Pareg::args())?;
     match &args.action {
-        Some(Action::Extract(ext)) => extract(&args, &ext),
-        Some(Action::Config) => config(),
+        Some(Action::Extract(ext)) => extract(&args, ext),
+        Some(Action::Config(conf)) => config(conf),
         None if args.should_quit => Ok(()),
         _ => Err("invalid usage. Type 'gecol -h' to display help.".into()),
     }
@@ -52,8 +52,7 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
             let theme = Theme::dark(rgb);
             println!("{theme}");
 
-            let template = Template::new("test.template", "output.template");
-            template.build(&theme)?;
+            build_templates(&config.templates, theme)?;
         }
         None => println!("No accent color detected..."),
     }
@@ -61,12 +60,15 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
     Ok(())
 }
 
-fn config() -> Result<(), Error> {
+fn config(conf: &args::config::Config) -> Result<(), Error> {
     let editor = std::env::var("EDITOR").unwrap_or("vi".to_string());
-    create_dir_all(Config::dir())?;
-    let file = Config::file();
+    let file = conf.path.to_owned().unwrap_or_else(Config::file);
+
+    if let Some(parent) = file.parent() {
+        create_dir_all(parent)?;
+    }
     if !file.exists() {
-        Config::default().save_default()?;
+        Config::default().save(&file)?;
     }
 
     Command::new(editor).arg(file).spawn()?.wait()?;

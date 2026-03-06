@@ -26,6 +26,8 @@ pub struct Config {
 
     #[serde(rename = "template", default)]
     pub templates: Vec<Template>,
+    #[serde(default)]
+    pub templates_dir: Option<PathBuf>,
 }
 
 impl Config {
@@ -43,7 +45,9 @@ impl Config {
     /// Config is required to be in TOML format.
     pub fn load(path: impl AsRef<Path>) -> Result<Self, Error> {
         let content = std::fs::read_to_string(path)?;
-        Ok(toml::from_str(&content)?)
+        let mut config: Config = toml::from_str(&content)?;
+        config.resolve_paths();
+        Ok(config)
     }
 
     /// Saves the current config to the default config file path.
@@ -78,12 +82,42 @@ impl Config {
             .join("gecol")
     }
 
+    /// Gets the templates directory.
+    ///
+    /// If the templates directory is not set, it uses `templates` directory
+    /// inside the default config directory.
+    pub fn templates_dir(&self) -> PathBuf {
+        match &self.templates_dir {
+            Some(dir) => dir.to_owned(),
+            None => Self::dir().join("templates"),
+        }
+    }
+
     /// Gets the default config file path.
     ///
     /// It uses the [`Config::dir`] to get the config directory, followed
     /// by the `config.toml`.
     pub fn file() -> PathBuf {
         Self::dir().join("config.toml")
+    }
+
+    /// Resolves the template paths.
+    ///
+    /// If the source path is not absolute, it is in the templates directory,
+    /// and if the target is not absolute, it is in the home directory.
+    fn resolve_paths(&mut self) {
+        let dir = self.templates_dir();
+        let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
+
+        for template in &mut self.templates {
+            if !template.source.is_absolute() {
+                template.source = dir.join(&template.source);
+            }
+
+            if !template.target.is_absolute() {
+                template.target = home_dir.join(&template.target);
+            }
+        }
     }
 }
 
@@ -99,6 +133,7 @@ impl Default for Config {
             warmth_bonus: default_warmth_bonus(),
             clusters: default_clusters(),
             templates: Default::default(),
+            templates_dir: Default::default(),
         }
     }
 }
