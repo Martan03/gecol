@@ -1,4 +1,4 @@
-use gecol::error::Error;
+use gecol::Error;
 use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 

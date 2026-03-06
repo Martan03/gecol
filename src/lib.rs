@@ -12,30 +12,67 @@
 //!
 //! ## Example
 //!
-//! ### Color extraction
+//! ### Full pipeline
 //!
-//! To extract the accent color from an image, you can use
-//! [`Extractor::extract`](crate::extract::Extractor::extract).
+//! You can extract a color, generate a theme and build a template using only
+//! a few lines of code:
 //!
-//! ```rust
-//! use gecol::{extract::Extractor, config::Config};
+//! ```rust,no_run
+//! use gecol::prelude::*;
+//! # fn get_templates() -> Vec<Template> { vec![] }
 //!
-//! match Extractor::extract("/path/to/img.jpg", &Config::default()) {
-//!     Ok(Some((r, g, b))) => println!("Extracted color: rgb({r}, {g}, {b})"),
-//!     _ => println!("No sufficient color found"),
+//! # fn main() -> Result<(), gecol::Error> {
+//! let config = Config::default();
+//!
+//! // 1. Extract the color from the given image
+//! if let Some(color) = Extractor::extract("/path/to/img.jpg", &config)? {
+//!     // 2. Generate theme based on that color
+//!     let theme = Theme::dark(color);
+//!
+//!     // 3. Build the configuration file
+//!     let template = Template::new("config.toml.template", "config.toml");
+//!     template.build(&theme)?;
+//!
+//!     // Or when having multiple templates (more efficient)
+//!     let templates: Vec<Template> = get_templates();
+//!     build_templates(&templates, theme)?;
 //! }
+//! # Ok(())
+//! # }
 //! ```
 //!
-//! ### Theme generating
+//! ### Template syntax
 //!
-//! You can also use the [`Theme`](crate::theme::Theme) struct to generate
-//! the theme using the extracted (or any) color.
+//! In the templates, you have access to a rich object-oriented color API:
 //!
-//! ```rust
-//! use gecol::theme::Theme;
+//! ```text
+//! background = "{{ background }}"
+//! transparent_bg = "{{ background.hexa(0.8) }}"
+//! hover_color = "{{ background.lighten(0.1) }}"
+//! border = rgba({{ primary.rgb }}aa)
+//! ```
 //!
-//! let color = (58, 203, 175);
-//! let theme = Theme::dark(color);
+//! ## Configuration
+//!
+//! The [`Config`](crate::Config) struct allows fine-tuning of the extraction
+//! algorithm, such as saliency bonus, warmth bias and so on. You can read
+//! more about all the fine-tuning options in the [`Config`](crate::Config)
+//! documentation.
+//!
+//! The [`Config`](crate::Config) also contains the templates configuration.
+//! For each template, you specify the `source` path (path to the template
+//! file) and the `target` path (built template destination).
+//!
+//! If the `source` is not absolute path, it automatically searches in the
+//! `templates` directory, which by default is in `~/.config/gecol/templates`
+//! on linux. The `target` uses home directory when the path is not absolute.
+//!
+//! You can add a template to the configuration like this:
+//!
+//! ```toml
+//! [[template]]
+//! source = "some-config.json.template"
+//! target = "/home/user/.config/some-app/some-config.json"
 //! ```
 //!
 //! ## Links
@@ -46,8 +83,12 @@
 //! - **Documentation**: [docs.rs](https://docs.rs/gecol/latest/gecol/)
 //! - **Author website:** [martan03.github.io](https://martan03.github.io)
 
-pub mod config;
-pub mod error;
+mod config;
+mod error;
 pub mod extract;
+pub mod prelude;
 pub mod template;
 pub mod theme;
+
+pub use config::Config;
+pub use error::Error;

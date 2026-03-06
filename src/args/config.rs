@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use gecol::error::Error;
+use gecol::Error;
 use pareg::Pareg;
 
 use crate::args::args_struct::Args;

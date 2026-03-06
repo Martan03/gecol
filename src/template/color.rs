@@ -25,7 +25,7 @@ impl Object for Color {
         args: &[minijinja::Value],
     ) -> Result<minijinja::Value, minijinja::Error> {
         let amount = args
-            .get(0)
+            .first()
             .and_then(|v| f32::try_from(v.clone()).ok())
             .unwrap_or(0.0);
 

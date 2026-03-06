@@ -4,8 +4,7 @@ use std::{
 };
 
 use gecol::{
-    config::Config, error::Error, extract::Extractor,
-    template::build_templates, theme::Theme,
+    Config, Error, extract::Extractor, template::build_templates, theme::Theme,
 };
 use pareg::Pareg;
 use termal::eprintcln;
