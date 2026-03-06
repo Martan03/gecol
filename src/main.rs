@@ -10,7 +10,7 @@ use crate::{
     args::{action::Action, args_struct::Args, extract::Extract},
     config::Config,
     error::Error,
-    extract::extractor::Extractor,
+    extract::Extractor,
     template::template::Template,
     theme::Theme,
 };

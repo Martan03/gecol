@@ -38,7 +38,7 @@ pub struct Theme {
 impl Theme {
     /// Generates dark theme based on the given color.
     ///
-    /// This color will be the primary color and the other colors will be
+    /// Given color will be the primary color and the other colors will be
     /// generated based on that color.
     pub fn dark((r, g, b): (u8, u8, u8)) -> Self {
         let color: Oklch =

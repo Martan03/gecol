@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// Geocol error wrapper around all the possible errors.
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]

@@ -59,24 +59,37 @@ impl Object for Color {
 }
 
 impl Color {
+    /// Converts the given color to the rgb string in format `r,g,b`.
     pub fn rgb(&self) -> String {
         let (r, g, b) = self.to_rgb();
         format!("{r},{g},{b}")
     }
 
+    /// Converts the given color to the rgba string in format `r,g,b,a`, where
+    /// `a` is the given `alpha` value.
+    ///
+    /// `alpha` is value in the range of 0 to 1.
     pub fn rgba(&self, alpha: f32) -> String {
         format!("{},{}", self.rgb(), alpha.clamp(0., 1.))
     }
 
+    /// Converts the given color to the hex string in format `#rrggbb`.
     pub fn hex(&self) -> String {
         format!("#{}", self.strip())
     }
 
+    /// Converts the given color to the hexa string in format `#rrggbbaa`,
+    /// where `aa` is the given `alpha` in hex.
+    ///
+    /// `alpha` is value in the range of 0 to 1.
     pub fn hexa(&self, alpha: f32) -> String {
         let alpha = (alpha.clamp(0., 1.) * 255.).round() as u8;
         format!("#{}{:02x}", self.strip(), alpha)
     }
 
+    /// Converts the given color to the hex string in format `rrggbb`.
+    ///
+    /// This compared [`Color::hex`] doesn't have the leading `#` character.
     pub fn strip(&self) -> String {
         let (r, g, b) = self.to_rgb();
         format!("{r:02x}{g:02x}{b:02x}")

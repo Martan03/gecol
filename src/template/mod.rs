@@ -6,6 +6,10 @@ pub mod color;
 pub mod template;
 
 /// Builds all the given templates with the given theme.
+///
+/// This is prefered way of building multiple templates compared to the
+/// [`Template::build`](crate::template::Template::build), because it reuses
+/// the same building environment.
 pub fn build_templates(
     templates: &[Template],
     theme: Theme,
@@ -39,6 +43,10 @@ pub fn build_templates(
 
 /// Gets the jinja context with all the [`Theme`](crate::theme::Theme) colors
 /// in it.
+///
+/// This is used when building the templates in
+/// [`build_templates`](crate::template::build_template) and
+/// [`Template::build`](crate::template::Template::build).
 pub fn jinja_context(theme: Theme) -> Value {
     context! {
         primary => Value::from_object(theme.primary),

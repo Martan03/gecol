@@ -1,8 +1,9 @@
 use image::Rgb;
 use palette::Lab;
 
+/// Represents a scored pixel extracted from the image.
 #[derive(Debug, Clone)]
-pub struct ScoredPixel {
+pub(crate) struct ScoredPixel {
     pub lab: Lab,
     pub rgb: (u8, u8, u8),
     pub score: f32,
@@ -18,8 +19,9 @@ impl ScoredPixel {
     }
 }
 
+/// Represents a scored cluster.
 #[derive(Debug, Clone)]
-pub struct ScoredCluster {
+pub(crate) struct ScoredCluster {
     pub cnt: usize,
     pub score: f32,
     pub max_score: f32,

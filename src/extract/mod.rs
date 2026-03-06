@@ -1,2 +1,4 @@
-pub mod extractor;
-pub mod scores;
+mod extractor;
+mod scores;
+
+pub use extractor::Extractor;

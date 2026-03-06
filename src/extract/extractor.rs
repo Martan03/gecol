@@ -12,6 +12,10 @@ use crate::{
     extract::scores::{ScoredCluster, ScoredPixel},
 };
 
+/// Struct for extracting a color from an image.
+///
+/// This struct is not meant for storing, but it only stores its state while
+/// extracting the color.
 #[derive(Debug, Clone)]
 pub struct Extractor<'a> {
     config: &'a Config,
@@ -22,7 +26,7 @@ pub struct Extractor<'a> {
 impl<'a> Extractor<'a> {
     /// Extracts the accent color from image on the given path.
     ///
-    /// `path` is any type convertible into `PathBuf`.
+    /// When no sufficient color is found, it returns `None`.
     pub fn extract<P>(
         path: P,
         config: &'a Config,
@@ -122,6 +126,11 @@ impl<'a> Extractor<'a> {
         candidates
     }
 
+    /// Gets best color from the candidate pixels.
+    ///
+    /// It uses k-means clustering in order to find the best color, where
+    /// it picks cluster with the highest average value (which suits the
+    /// cluster size requirement) and picks the pixel with the highest score.
     fn get_best_col(&self, candids: Vec<ScoredPixel>) -> Option<(u8, u8, u8)> {
         let clusters = self.get_clusters(candids);
         let min_size = ((self.width * self.height) as f32 * 0.001) as usize;
@@ -142,6 +151,7 @@ impl<'a> Extractor<'a> {
         best
     }
 
+    /// Gets [`ScoredClusters`] from using k-means clustring.
     fn get_clusters(&self, candids: Vec<ScoredPixel>) -> Vec<ScoredCluster> {
         let labs: Vec<Lab> = candids.iter().map(|c| c.lab).collect();
         let k = self.config.clusters.min(labs.len());
