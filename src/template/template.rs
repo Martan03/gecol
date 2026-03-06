@@ -1,55 +1,47 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use minijinja::{Environment, Value, context};
+use minijinja::Environment;
 use serde::{Deserialize, Serialize};
 
-use crate::{error::Error, theme::Theme};
+use crate::{error::Error, template::jinja_context, theme::Theme};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Template<P1, P2>
-where
-    P1: AsRef<Path>,
-    P2: AsRef<Path>,
-{
-    pub template: P1,
-    pub target: P2,
+pub struct Template {
+    pub source: PathBuf,
+    pub target: PathBuf,
 }
 
-impl<P1, P2> Template<P1, P2>
-where
-    P1: AsRef<Path>,
-    P2: AsRef<Path>,
-{
+impl Template {
     /// Creates new template with `template` as source and `target` as the
     /// build destination.
-    pub fn new(template: P1, target: P2) -> Self {
-        Self { template, target }
+    pub fn new<P1, P2>(source: P1, target: P2) -> Self
+    where
+        P1: AsRef<Path>,
+        P2: AsRef<Path>,
+    {
+        Self {
+            source: source.as_ref().to_owned(),
+            target: target.as_ref().to_owned(),
+        }
     }
 
-    /// Builds the template in the `template` dir and saves it to `target`.
+    /// Builds the template at `source` and saves it to `target`.
     pub fn build(&self, theme: &Theme) -> Result<(), Error> {
-        let content = std::fs::read_to_string(&self.template)?;
+        let content = std::fs::read_to_string(&self.source)?;
 
         let mut env = Environment::new();
-
         env.add_template("template", &content)?;
 
-        let template = env.get_template("template")?;
-        let ctx = context! {
-            primary => Value::from_object(theme.primary),
-            secondary => Value::from_object(theme.secondary),
-            background => Value::from_object(theme.background),
-            surface => Value::from_object(theme.surface),
-            border => Value::from_object(theme.border),
-            foreground => Value::from_object(theme.foreground),
-            muted => Value::from_object(theme.muted),
-            success => Value::from_object(theme.success),
-            warning => Value::from_object(theme.warning),
-            error => Value::from_object(theme.error),
-        };
+        let source = self.source.to_string_lossy();
+        let template = env.get_template(&source)?;
+        let ctx = jinja_context(theme.clone());
         let built = template.render(ctx)?;
 
+        if let Some(parent) = self.target.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
         std::fs::write(&self.target, built)?;
+
         Ok(())
     }
 }

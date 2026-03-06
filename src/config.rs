@@ -1,12 +1,8 @@
-use std::{
-    fs::File,
-    io::{BufReader, BufWriter},
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::error::Error;
+use crate::{error::Error, template::template::Template};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -26,25 +22,33 @@ pub struct Config {
     pub warmth_bonus: f32,
     #[serde(default = "default_clusters")]
     pub clusters: usize,
+
+    #[serde(rename = "template", default)]
+    pub templates: Vec<Template>,
 }
 
 impl Config {
-    pub fn from_default_json() -> Self {
-        Self::from_json(Self::file()).unwrap_or_default()
+    pub fn load_default() -> Self {
+        Self::load(Self::file()).unwrap_or_default()
     }
 
-    pub fn from_json(path: impl AsRef<Path>) -> Result<Self, Error> {
-        let f = BufReader::new(File::open(path)?);
-        Ok(serde_json::from_reader(f)?)
+    pub fn load(path: impl AsRef<Path>) -> Result<Self, Error> {
+        let content = std::fs::read_to_string(path)?;
+        Ok(toml::from_str(&content)?)
     }
 
-    pub fn to_default_json(&self) -> Result<(), Error> {
-        self.to_json(Self::file())
+    pub fn save_default(&self) -> Result<(), Error> {
+        self.save(Self::file())
     }
 
-    pub fn to_json(&self, path: impl AsRef<Path>) -> Result<(), Error> {
-        let f = BufWriter::new(File::create(path)?);
-        serde_json::to_writer_pretty(f, self)?;
+    pub fn save(&self, path: impl AsRef<Path>) -> Result<(), Error> {
+        let path = path.as_ref();
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        let content = toml::to_string_pretty(self)?;
+        std::fs::write(path, content)?;
         Ok(())
     }
 
@@ -55,7 +59,7 @@ impl Config {
     }
 
     pub fn file() -> PathBuf {
-        Self::dir().join("config.json")
+        Self::dir().join("config.toml")
     }
 }
 
@@ -70,6 +74,7 @@ impl Default for Config {
             sal_bonus: default_sal_bonus(),
             warmth_bonus: default_warmth_bonus(),
             clusters: default_clusters(),
+            templates: Default::default(),
         }
     }
 }

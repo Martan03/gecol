@@ -51,8 +51,8 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
     };
 
     let config = match &extract.config {
-        Some(path) => Config::from_json(path)?,
-        None => Config::from_default_json(),
+        Some(path) => Config::load(path)?,
+        None => Config::load_default(),
     };
 
     match Extractor::extract(img, &config)? {
@@ -74,7 +74,7 @@ fn config() -> Result<(), Error> {
     create_dir_all(Config::dir())?;
     let file = Config::file();
     if !file.exists() {
-        Config::default().to_default_json()?;
+        Config::default().save_default()?;
     }
 
     Command::new(editor).arg(file).spawn()?.wait()?;

@@ -7,7 +7,9 @@ pub enum Error {
     #[error(transparent)]
     Img(#[from] image::ImageError),
     #[error(transparent)]
-    Json(#[from] serde_json::Error),
+    TomlDe(#[from] toml::de::Error),
+    #[error(transparent)]
+    TomlSer(#[from] toml::ser::Error),
     #[error(transparent)]
     Pareg(#[from] pareg::ArgError),
     #[error(transparent)]
