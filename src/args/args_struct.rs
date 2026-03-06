@@ -1,10 +1,8 @@
+use gecol::error::Error;
 use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 
-use crate::{
-    args::{action::Action, extract::Extract},
-    error::Error,
-};
+use crate::args::{action::Action, extract::Extract};
 
 #[derive(Debug, Clone, Default)]
 pub struct Args {

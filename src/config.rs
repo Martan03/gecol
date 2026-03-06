@@ -2,9 +2,9 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{error::Error, template::template::Template};
+use crate::{error::Error, template::Template};
 
-/// Holds all the geocol configuration.
+/// Holds all the gecol configuration.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     #[serde(rename = "resize_width", default = "default_resize")]
@@ -70,7 +70,7 @@ impl Config {
 
     /// Gets the default config directory.
     ///
-    /// It is `geocol` folder inside of the config directory
+    /// It is `gecol` folder inside of the config directory
     /// (e.g. `.config` on linux)
     pub fn dir() -> PathBuf {
         dirs::config_dir()

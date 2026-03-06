@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use geocol::theme::Color;
+/// use gecol::theme::Color;
 ///
 /// let color = Color::from_rgb(67, 69, 42);
 ///

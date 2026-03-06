@@ -3,24 +3,16 @@ use std::{
     process::{Command, ExitCode},
 };
 
+use gecol::{
+    config::Config, error::Error, extract::Extractor, template::Template,
+    theme::Theme,
+};
 use pareg::Pareg;
 use termal::eprintcln;
 
-use crate::{
-    args::{action::Action, args_struct::Args, extract::Extract},
-    config::Config,
-    error::Error,
-    extract::Extractor,
-    template::template::Template,
-    theme::Theme,
-};
+use crate::args::{action::Action, args_struct::Args, extract::Extract};
 
 pub mod args;
-pub mod config;
-pub mod error;
-pub mod extract;
-pub mod template;
-pub mod theme;
 
 fn main() -> ExitCode {
     match run() {
@@ -35,7 +27,7 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Error> {
     let args = Args::parse(Pareg::args())?;
     match &args.action {
-        Some(Action::Extract(ext)) => extract(&args, ext),
+        Some(Action::Extract(ext)) => extract(&args, &ext),
         Some(Action::Config) => config(),
         None if args.should_quit => Ok(()),
         _ => Err("invalid usage. Type 'gecol -h' to display help.".into()),

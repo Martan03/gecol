@@ -1,9 +1,11 @@
 use minijinja::{Environment, ErrorKind, Value, context};
 
-use crate::{error::Error, template::template::Template, theme::Theme};
+use crate::{error::Error, theme::Theme};
 
 pub mod color;
-pub mod template;
+mod template_struct;
+
+pub use template_struct::Template;
 
 /// Builds all the given templates with the given theme.
 ///
