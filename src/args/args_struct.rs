@@ -80,25 +80,27 @@ A perception-aware accent color extractor and dynamic theme generator.
   {'c}gecol{'_} [action] [{'y}options{'_}]
 
 {'g}Actions{'_}:
-  {'y}run{'_} <IMAGE> [run options]
+  {'y}run{'_} <IMAGE> [options]
     Runs the color extractor on the given image and builds the templates.
 
-  {'y}extract{'_} <IMAGE> [run options]
+  {'y}extract{'_} <IMAGE> [options]
     Extracts the color from the given image.
 
-  {'y}config{'_} [config options]
+  {'y}config{'_} [config options] [options]
     Opens the configuration file.
 
-{'g}Run options{'_}:
-  {'y}-c  --config{'_} <FILE>
-    Specifies custom config path.
-
 {'g}Config options{'_}:
-  {'y}-c  --config{'_} <FILE>
-    Specifies custom config path.
-
   {'y}-p  --path{'_}
     Prints the default configuration file location.
+
+{'g}Option{'_}:
+  These options can be used in any of the actions.
+
+  {'y}-c  --config{'_} <FILE>
+    Specifies custom config path
+
+  {'y}-q  --quiet{'_}
+    Turns off unnecessary printing to terminal.
 
 {'g}Flags{'_}:
   {'y}-h  --help{'_}
