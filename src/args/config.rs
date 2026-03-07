@@ -11,12 +11,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn parse(args: &mut Pareg) -> Result<Self, Error> {
+    pub fn parse(args: &mut Pareg, pargs: &mut Args) -> Result<Self, Error> {
         let mut parsed = Self::default();
         while let Some(arg) = args.next() {
             match arg {
-                "-p" | "--path" => parsed.path = args.next_arg()?,
-                "--" => break,
+                "-c" | "--config" => parsed.path = args.next_arg()?,
+                "-p" | "--path" => {
+                    println!("{}", gecol::Config::file().to_string_lossy());
+                    pargs.should_quit = true;
+                    return Ok(parsed);
+                }
                 _ => return Err(Args::unknown_arg(arg)),
             }
         }

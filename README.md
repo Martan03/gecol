@@ -23,8 +23,6 @@ cd gecol
 cargo install --path .
 ```
 
-After it's done compiling, the binary will be `target/release/gecol`.
-
 ## Rust crate
 
 If you want to use this in your project, you can use the rust crate. You can
@@ -44,7 +42,7 @@ In order to build the templates (assuming you already configured it - more in
 the theme created from the extracted color from the given image, you can run:
 
 ```bash
-gecol run -i /path/to/image.jpg
+gecol run /path/to/image.jpg
 ```
 
 ## Configuration

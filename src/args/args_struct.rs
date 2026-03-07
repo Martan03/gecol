@@ -18,14 +18,18 @@ impl Args {
 
     pub fn parse(mut args: Pareg) -> Result<Self, Error> {
         let mut parsed = Self::default();
-        while let Some(arg) = args.next() {
+        if let Some(arg) = args.next() {
             match arg {
                 "run" => {
+                    let extract = Extract::parse(&mut args)?;
+                    parsed.action = Some(Action::Run(extract));
+                }
+                "extract" => {
                     let extract = Extract::parse(&mut args)?;
                     parsed.action = Some(Action::Extract(extract));
                 }
                 "config" => {
-                    let config = Config::parse(&mut args)?;
+                    let config = Config::parse(&mut args, &mut parsed)?;
                     parsed.action = Some(Action::Config(config));
                 }
                 "-v" | "--version" => {
@@ -55,24 +59,38 @@ impl Args {
             "Welcome to {'g}gecol{'_} by {}{'_}
 {'bl}Version {}{'_}
 
-A perception-aware accent color extractor.
+A perception-aware accent color extractor and dynamic theme generator.
 
 {'g}Usage{'_}:
-  {'c}gecol{'_} [{'y}flags{'_}]
-    Behaves according to the flags.
+  {'c}gecol{'_} [action] [{'y}options{'_}]
 
-{'g}Flags{'_}:
-  {'y}-i  --image{'_}
-    Image to extract the color from.
+{'g}Actions{'_}:
+  {'y}run{'_} <IMAGE> [run options]
+    Runs the color extractor on the given image and builds the templates.
 
-  {'y}-c  --config{'_}
+  {'y}extract{'_} <IMAGE> [run options]
+    Extracts the color from the given image.
+
+  {'y}config{'_} [config options]
+    Opens the configuration file.
+
+{'g}Run options{'_}:
+  {'y}-c  --config{'_} <FILE>
     Specifies custom config path.
 
+{'g}Config options{'_}:
+  {'y}-c  --config{'_} <FILE>
+    Specifies custom config path.
+
+  {'y}-p  --path{'_}
+    Prints the default configuration file location.
+
+{'g}Flags{'_}:
   {'y}-h  --help{'_}
     Displays this help.
 
   {'y}-v --version{'_}
-    Displays the version.",
+    Displays the current version.",
             termal::gradient("Martan03", (0, 220, 255), (175, 80, 255)),
             Self::VERSION_NUMBER
         );
