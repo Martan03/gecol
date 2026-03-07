@@ -7,25 +7,44 @@ use crate::{error::Error, template::Template};
 /// Holds all the gecol configuration.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
+    // The width image to extract color from resizes to. If set to `None`, it
+    // keeps the original width.
     #[serde(rename = "resize_width", default = "default_resize")]
     pub res_w: Option<u32>,
+    // The height image to extract color from resizes to. If set to `None`, it
+    // keeps the original height.
     #[serde(rename = "resize_height", default = "default_resize")]
     pub res_h: Option<u32>,
+
+    // Saturation threshold for a pixel to be consider for the extraction.
+    // If the pixels saturation is lower than this value, it's skipped.
     #[serde(rename = "saturation_threshold", default = "default_sat_thresh")]
     pub sat_thresh: f32,
+    // Value threshold for a pixel to be consider for the extraction.
+    // If the pixels value is lower than this value, it's skipped.
     #[serde(rename = "value_threshold", default = "default_val_thresh")]
     pub val_thresh: f32,
+
+    // Threshold for the saliency to be used. If the average pixel saliency
+    // is lower than this value, saliency is not used.
     #[serde(rename = "saliency_threshold", default)]
     pub sal_thresh: f32,
+    // By how much the pixels saliency is multiplied by for its score.
     #[serde(rename = "saliency_bonus", default = "default_sal_bonus")]
     pub sal_bonus: f32,
+    // By how much the pixels warmth factor is multiplied by for its score.
     #[serde(default = "default_warmth_bonus")]
     pub warmth_bonus: f32,
+
+    // Number of cluster used in the k-means clustering of the pixels:
     #[serde(default = "default_clusters")]
     pub clusters: usize,
 
+    // List of templates to be built.
     #[serde(rename = "template", default)]
     pub templates: Vec<Template>,
+    // Path to the directory containing the templates.
+    // `~/.config/gecol/templates` by default on linux.
     #[serde(default)]
     pub templates_dir: Option<PathBuf>,
 }

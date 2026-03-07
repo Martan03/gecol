@@ -4,25 +4,31 @@ A perception-aware accent color extractor and dynamic theme generator.
 
 ## Table of Contents
 
-{{ mdcon }}
+- [Installation](#installation)
+- [Rust crate](#rust-crate)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Templates](#templates)
+- [Links](#links)
 
 ## Installation
 
-Currently there's no other way of installing then building it yourself. You
-need to have Rust Toolchain installed (see
+Currently, the primary way to install `gecol` is via the Rust toolchain (see
 [rust installation page](https://www.rust-lang.org/tools/install)). When you
-have the Rust Toochain, you can build the project with `cargo`:
+have the Rust Toolchain, you can install the project from source:
 
 ```bash
-cargo build -r
+git clone https://github.com/Martan03/gecol
+cd gecol
+cargo install --path .
 ```
 
-After it's done compiling, the binary will be `target/release/termodoro`.
+After it's done compiling, the binary will be `target/release/gecol`.
 
 ## Rust crate
 
-If you want to use this in you project, you can use the rust crate. You can
-add this crate to you project using `cargo`:
+If you want to use this in your project, you can use the rust crate. You can
+add this crate to your project using `cargo`:
 
 ```bash
 cargo add gecol
@@ -31,17 +37,14 @@ cargo add gecol
 You can read more about the library usage in the documentation at
 [docs.rs](https://docs.rs/gecol/latest/gecol/).
 
-## Templates
+## Usage
 
-By default the templates folder is at `~/.config/gecol/templates` if not
-configured otherwise. In the templates, you have access to a rich
-object-oriented color API:
+In order to build the templates (assuming you already configured it - more in
+[Configuration](#configuration) and [Templates](#templates) sections) with
+the theme created from the extracted color from the given image, you can run:
 
-```text
-background = "{{ background }}"
-transparent_bg = "{{ background.hexa(0.8) }}"
-hover_color = "{{ background.lighten(0.1) }}"
-border = rgba({{ primary.rgb }}aa)
+```bash
+gecol run -i /path/to/image.jpg
 ```
 
 ## Configuration
@@ -67,8 +70,23 @@ source = "some-config.json.template"
 target = "/home/user/.config/some-app/some-config.json"
 ```
 
+## Templates
+
+By default the templates folder is at `~/.config/gecol/templates` if not
+configured otherwise. In the templates, you have access to a rich
+object-oriented color API:
+
+```text
+background = "{{ background }}"
+transparent_bg = "{{ background.hexa(0.8) }}"
+hover_color = "{{ background.lighten(0.1) }}"
+border = rgba({{ primary.rgb }}aa)
+```
+
 ## Links
 
 - **Author:** [Martan03](https://github.com/Martan03)
 - **GitHub repository:** [gecol](https://github.com/Martan03/gecol)
+- **Package**: [crates.io](https://crates.io/crates/gecol)
+- **Documentation**: [docs.rs](https://docs.rs/gecol/latest/gecol/)
 - **Author website:** [martan03.github.io](https://martan03.github.io)
