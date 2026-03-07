@@ -7,6 +7,7 @@ use mss_saliency::maximum_symmetric_surround_saliency;
 use palette::{FromColor, Hsv, IntoColor, Lab, Srgb};
 
 use crate::{
+    Cache,
     config::Config,
     error::Error,
     extract::scores::{ScoredCluster, ScoredPixel},
@@ -28,6 +29,32 @@ impl<'a> Extractor<'a> {
     ///
     /// When no sufficient color is found, it returns `None`.
     pub fn extract<P>(
+        path: P,
+        config: &'a Config,
+    ) -> Result<Option<(u8, u8, u8)>, Error>
+    where
+        P: AsRef<Path>,
+    {
+        let cache_file =
+            config.cache_dir.to_owned().unwrap_or_else(Config::file);
+        let mut cache = Cache::load(&cache_file);
+        let key = Cache::key(config, path.as_ref())
+            .unwrap_or("fallback".to_string());
+
+        if let Some(&color) = cache.entries.get(&key) {
+            return Ok(Some(color));
+        }
+
+        let color = Self::inner_extract(path, config)?;
+        if let Some(col) = color {
+            cache.entries.insert(key, col);
+            _ = cache.save(&cache_file);
+        }
+
+        Ok(color)
+    }
+
+    pub fn inner_extract<P>(
         path: P,
         config: &'a Config,
     ) -> Result<Option<(u8, u8, u8)>, Error>

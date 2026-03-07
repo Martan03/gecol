@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    hash::Hash,
+    path::{Path, PathBuf},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -47,6 +50,11 @@ pub struct Config {
     // `~/.config/gecol/templates` by default on linux.
     #[serde(default)]
     pub templates_dir: Option<PathBuf>,
+
+    /// Path to the directory containing cached colors for faster repeated
+    /// extraction.
+    #[serde(default)]
+    pub cache_dir: Option<PathBuf>,
 }
 
 impl Config {
@@ -153,7 +161,23 @@ impl Default for Config {
             clusters: default_clusters(),
             templates: Default::default(),
             templates_dir: Default::default(),
+            cache_dir: Default::default(),
         }
+    }
+}
+
+impl Hash for Config {
+    /// Hashes the config state. It doesn't include the templates configuration
+    /// since it doesn't effect the actual extraction.
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.res_w.hash(state);
+        self.res_h.hash(state);
+        self.sat_thresh.to_bits().hash(state);
+        self.val_thresh.to_bits().hash(state);
+        self.sal_thresh.to_bits().hash(state);
+        self.sal_bonus.to_bits().hash(state);
+        self.warmth_bonus.to_bits().hash(state);
+        self.clusters.hash(state);
     }
 }
 
