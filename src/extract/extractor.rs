@@ -2,6 +2,7 @@ use std::path::Path;
 
 use image::{DynamicImage, RgbImage, imageops::FilterType};
 use imgref::Img;
+use indicatif::ProgressBar;
 use kmeans_colors::get_kmeans;
 use mss_saliency::maximum_symmetric_surround_saliency;
 use palette::{FromColor, Hsv, IntoColor, Lab, Srgb};
@@ -35,6 +36,22 @@ impl<'a> Extractor<'a> {
     where
         P: AsRef<Path>,
     {
+        Self::extract_with_progress(path, config, &ProgressBar::hidden())
+    }
+
+    /// Extracts the accent color from image on the given path with the
+    /// progress reporting.
+    ///
+    /// When no sufficient color is found, it returns `None`.
+    pub fn extract_with_progress<P>(
+        path: P,
+        config: &'a Config,
+        spinner: &ProgressBar,
+    ) -> Result<Option<(u8, u8, u8)>, Error>
+    where
+        P: AsRef<Path>,
+    {
+        spinner.set_message("Checking cache...");
         let cache_file =
             config.cache_dir.to_owned().unwrap_or_else(Cache::file);
         let mut cache = Cache::load(&cache_file);
@@ -42,21 +59,24 @@ impl<'a> Extractor<'a> {
             .unwrap_or("fallback".to_string());
 
         if let Some(&color) = cache.entries.get(&key) {
+            spinner.finish_with_message("Color loaded from cache!");
             return Ok(Some(color));
         }
 
-        let color = Self::inner_extract(path, config)?;
+        let color = Self::inner_extract(path, config, spinner)?;
         if let Some(col) = color {
             cache.entries.insert(key, col);
             _ = cache.save(&cache_file);
         }
 
+        spinner.finish_with_message("Color extracted!");
         Ok(color)
     }
 
-    pub fn inner_extract<P>(
+    fn inner_extract<P>(
         path: P,
         config: &'a Config,
+        spinner: &ProgressBar,
     ) -> Result<Option<(u8, u8, u8)>, Error>
     where
         P: AsRef<Path>,
@@ -66,9 +86,13 @@ impl<'a> Extractor<'a> {
             width: 0,
             height: 0,
         };
+
+        spinner.set_message("Decoding image...");
         let img = image::open(path)?;
+        spinner.set_message("Resizing image...");
         let img = extractor.prep_img(img);
 
+        spinner.set_message("Extracting perception-aware colors...");
         let (sal_map, is_sal_worth) = extractor.gen_saliency(&img);
         #[cfg(debug_assertions)]
         extractor.save_saliency(&sal_map);
@@ -201,7 +225,6 @@ impl<'a> Extractor<'a> {
         ) {
             img.save("debug_saliency.png")
                 .expect("Failed to save debug image");
-            println!("Saved debug_saliency.png to current directory.");
         }
     }
 }

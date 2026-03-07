@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use gecol::Error;
 use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
@@ -7,6 +9,8 @@ use crate::args::{action::Action, config::Config, extract::Extract};
 #[derive(Debug, Clone, Default)]
 pub struct Args {
     pub action: Option<Action>,
+    pub config: Option<PathBuf>,
+    pub quiet: bool,
     pub should_quit: bool,
 }
 
@@ -21,11 +25,11 @@ impl Args {
         if let Some(arg) = args.next() {
             match arg {
                 "run" => {
-                    let extract = Extract::parse(&mut args)?;
+                    let extract = Extract::parse(&mut args, &mut parsed)?;
                     parsed.action = Some(Action::Run(extract));
                 }
                 "extract" => {
-                    let extract = Extract::parse(&mut args)?;
+                    let extract = Extract::parse(&mut args, &mut parsed)?;
                     parsed.action = Some(Action::Extract(extract));
                 }
                 "config" => {
@@ -44,6 +48,17 @@ impl Args {
             }
         }
         Ok(parsed)
+    }
+
+    /// Handles the shared flags across actions.
+    pub fn shared_flags(&mut self, args: &mut Pareg) -> Result<(), Error> {
+        let Some(arg) = args.cur() else { return Ok(()) };
+        match arg {
+            "-c" | "--config" => self.config = args.next_arg()?,
+            "-q" | "--quiet" => self.quiet = true,
+            arg => return Err(Self::unknown_arg(arg)),
+        }
+        Ok(())
     }
 
     pub fn unknown_arg(arg: &str) -> Error {
