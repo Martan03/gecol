@@ -36,7 +36,7 @@ impl<'a> Extractor<'a> {
         P: AsRef<Path>,
     {
         let cache_file =
-            config.cache_dir.to_owned().unwrap_or_else(Config::file);
+            config.cache_dir.to_owned().unwrap_or_else(Cache::file);
         let mut cache = Cache::load(&cache_file);
         let key = Cache::key(config, path.as_ref())
             .unwrap_or("fallback".to_string());
