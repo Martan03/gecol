@@ -60,7 +60,14 @@ impl Color {
     /// channel.
     pub fn lighten(&self, amount: f32) -> Self {
         let mut color = self.0;
+        let old_w_dist = 1. - color.l;
+
         color.l = (color.l + amount).clamp(0., 1.);
+        let new_w_dist = 1. - color.l;
+
+        if old_w_dist > 0. {
+            color.chroma *= new_w_dist / old_w_dist;
+        }
         Self(color)
     }
 
@@ -69,9 +76,9 @@ impl Color {
     /// It multiplies the current lightness by 1 + `amount` percent (e.g. 0.2
     /// for a 20% brighter color)
     pub fn brighten(&self, amount: f32) -> Self {
-        let mut color = self.0;
-        color.l = (color.l * (1.0 + amount)).clamp(0., 1.0);
-        Self(color)
+        let color = self.0;
+        let target = (color.l * (1.0 + amount)).clamp(0., 1.0);
+        self.lighten(target - color.l)
     }
 
     /// Darkens the color by adding a value to it.
@@ -80,7 +87,12 @@ impl Color {
     /// lightness channel.
     pub fn darken(&self, amount: f32) -> Self {
         let mut color = self.0;
+        let old_l = color.l;
+
         color.l = (color.l - amount).clamp(0., 1.);
+        if old_l > 0.0 {
+            color.chroma *= color.l / old_l;
+        }
         Self(color)
     }
 
@@ -90,7 +102,10 @@ impl Color {
     /// for a 20% dimmer color)
     pub fn dim(&self, amount: f32) -> Self {
         let mut color = self.0;
-        color.l = (color.l * (1.0 - amount)).clamp(0., 1.0);
+        let factor = (1. - amount).clamp(0., 1.);
+
+        color.l *= factor;
+        color.chroma *= factor;
         Self(color)
     }
 

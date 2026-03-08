@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use minijinja::Environment;
 use serde::{Deserialize, Serialize};
@@ -47,9 +50,9 @@ use crate::{error::Error, template::jinja_context, theme::Theme};
 /// - `darken(amount)`: darkens the color by adding a value to it.
 /// - `dim(amount)`: dims the color relatively by a given multiplier.
 /// - `saturate(amount)`: increases the saturation (chroma component) of the
-///     color.
+///   color.
 /// - `desaturate(amount)`: descreases the saturation (chroma component) of the
-///     color.
+///   color.
 ///
 /// ## Color formats
 ///
@@ -59,10 +62,10 @@ use crate::{error::Error, template::jinja_context, theme::Theme};
 ///
 /// - `hex`: `#rrggbb` (default if no formatter is specified)
 /// - `hexa(alpha)`: `#rrggbbaa`, where `alpha` is the provided float
-///     (0.0 to 1.0).
+///   (0.0 to 1.0).
 /// - `rgb`: `r,g,b` format (e.g. `42,128,56`).
 /// - `rgba(alpha)`: `r,g,b,a` format (e.g. `42,128,56,0.8`), where `alpha` is
-///     the provided float (0.0 to 1.0).
+///   the provided float (0.0 to 1.0).
 /// - `strip`: hex without the leading `#` character - `rrggbb`.
 /// - `r`, `g`, `b`: extracts the corresponding raw RGB color component.
 ///
@@ -82,6 +85,12 @@ use crate::{error::Error, template::jinja_context, theme::Theme};
 pub struct Template {
     pub source: PathBuf,
     pub target: PathBuf,
+    // A command to be executed after the template is built.
+    //
+    // Some program require restart after their configuration is edited, such
+    // as waybar, so you can restart them here.
+    #[serde(default)]
+    pub hook: Option<String>,
 }
 
 impl Template {
@@ -95,6 +104,7 @@ impl Template {
         Self {
             source: source.as_ref().to_owned(),
             target: target.as_ref().to_owned(),
+            hook: None,
         }
     }
 
@@ -119,6 +129,32 @@ impl Template {
         }
         std::fs::write(&self.target, built)?;
 
+        self.run_hook();
         Ok(())
+    }
+
+    /// Runs the template hook if set.
+    ///
+    /// It runs the set hook in the home directory (or in `/` if home cannot
+    /// be found).
+    pub fn run_hook(&self) {
+        let Some(hook) = &self.hook else {
+            return;
+        };
+
+        let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
+        run_hook(hook, &home_dir);
+    }
+}
+
+/// Runs the given hook on the given directory.
+pub fn run_hook(hook: &str, dir: &Path) {
+    let status = Command::new("sh")
+        .arg("-c")
+        .arg(hook)
+        .current_dir(dir)
+        .status();
+    if let Err(e) = status {
+        eprintln!("Warning: Failed to execute hook '{hook}': {e}",);
     }
 }

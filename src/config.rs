@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     hash::Hash,
     path::{Path, PathBuf},
 };
@@ -44,8 +45,8 @@ pub struct Config {
     pub clusters: usize,
 
     // List of templates to be built.
-    #[serde(rename = "template", default)]
-    pub templates: Vec<Template>,
+    #[serde(default)]
+    pub templates: HashMap<String, Template>,
     // Path to the directory containing the templates.
     // `~/.config/gecol/templates` by default on linux.
     #[serde(default)]
@@ -73,7 +74,13 @@ impl Config {
     pub fn load(path: impl AsRef<Path>) -> Result<Self, Error> {
         let content = std::fs::read_to_string(path)?;
         let mut config: Config = toml::from_str(&content)?;
-        config.resolve_paths();
+
+        let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
+        if let Some(path) = &mut config.templates_dir {
+            Self::expand_tilde(path, &home_dir);
+        }
+        config.resolve_paths(&home_dir);
+
         Ok(config)
     }
 
@@ -132,11 +139,13 @@ impl Config {
     ///
     /// If the source path is not absolute, it is in the templates directory,
     /// and if the target is not absolute, it is in the home directory.
-    fn resolve_paths(&mut self) {
+    fn resolve_paths(&mut self, home_dir: &Path) {
         let dir = self.templates_dir();
-        let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
 
-        for template in &mut self.templates {
+        for template in self.templates.values_mut() {
+            Self::expand_tilde(&mut template.source, home_dir);
+            Self::expand_tilde(&mut template.target, home_dir);
+
             if !template.source.is_absolute() {
                 template.source = dir.join(&template.source);
             }
@@ -144,6 +153,12 @@ impl Config {
             if !template.target.is_absolute() {
                 template.target = home_dir.join(&template.target);
             }
+        }
+    }
+
+    fn expand_tilde(path: &mut PathBuf, home_dir: &Path) {
+        if let Ok(stripped) = path.strip_prefix("~") {
+            *path = home_dir.join(stripped);
         }
     }
 }

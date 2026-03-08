@@ -8,7 +8,7 @@ pub struct Config;
 
 impl Config {
     pub fn parse(args: &mut Pareg, pargs: &mut Args) -> Result<Self, Error> {
-        let parsed = Self::default();
+        let parsed = Self;
         while let Some(arg) = args.next() {
             match arg {
                 "-p" | "--path" => {

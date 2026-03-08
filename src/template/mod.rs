@@ -1,6 +1,11 @@
+use std::{
+    collections::{HashMap, HashSet},
+    path::PathBuf,
+};
+
 use minijinja::{Environment, ErrorKind, Value, context};
 
-use crate::{error::Error, theme::Theme};
+use crate::{error::Error, template::template_struct::run_hook, theme::Theme};
 
 pub mod color;
 mod template_struct;
@@ -12,8 +17,12 @@ pub use template_struct::Template;
 /// This is prefered way of building multiple templates compared to the
 /// [`Template::build`](crate::template::Template::build), because it reuses
 /// the same building environment.
+///
+/// It runs all the hooks after copying all the templates. This is usefull
+/// if you have multiple files (such as waybar config and color), but you
+/// don't want to run the hook twice.
 pub fn build_templates(
-    templates: &[Template],
+    templates: &HashMap<String, Template>,
     theme: Theme,
 ) -> Result<(), Error> {
     let mut env = Environment::new();
@@ -27,8 +36,10 @@ pub fn build_templates(
         .with_source(e)),
     });
 
+    let mut hooks = HashSet::new();
+
     let ctx = jinja_context(theme);
-    for template in templates {
+    for template in templates.values() {
         let source = template.source.to_string_lossy();
 
         let builder = env.get_template(&source)?;
@@ -38,6 +49,15 @@ pub fn build_templates(
             std::fs::create_dir_all(parent)?;
         }
         std::fs::write(&template.target, built)?;
+
+        if let Some(hook) = &template.hook {
+            hooks.insert(hook.clone());
+        }
+    }
+
+    let home_dir = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
+    for hook in hooks {
+        run_hook(&hook, &home_dir);
     }
 
     Ok(())
