@@ -60,9 +60,9 @@ impl Theme {
         Self {
             primary: Color(color),
             secondary: Color(secondary),
-            background: Color(Oklch::new(0.19, 0.004, color.hue)),
-            surface: Color(Oklch::new(0.24, 0.006, color.hue)),
-            border: Color(Oklch::new(0.32, 0.008, color.hue)),
+            background: Color(Oklch::new(0.20, 0.006, color.hue)),
+            surface: Color(Oklch::new(0.25, 0.008, color.hue)),
+            border: Color(Oklch::new(0.32, 0.010, color.hue)),
             foreground: Color(Oklch::new(0.9, 0.01, color.hue)),
             muted: Color(Oklch::new(0.65, 0.02, color.hue)),
             success: Color(success),
