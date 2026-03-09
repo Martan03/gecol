@@ -45,33 +45,45 @@ the theme created from the extracted color from the given image, you can run:
 gecol run /path/to/image.jpg
 ```
 
+You can view all the usage options by displaying the help:
+
+```bash
+gecol -h
+```
+
 ## Configuration
 
-The configuration file (`~/.config/gecol/config.toml` on linux) allows
-fine-tuning of the extraction algorithm, such as saliency bonus, warmth bias
-and so on. You can read more about all the fine-tuning options in the `Config`
-struct documentation.
+> Note: You can check the default configuration file location by running
+> `gecol config -p`.
+
+The configuration file allows fine-tuning of the extraction algorithm, such as
+saliency bonus, warmth bias and so on. You can read more about all the
+fine-tuning options in the `Config` struct documentation.
 
 The config file also contains the templates configuration. Each template
 contains the `source` path (path to the template file) and the `target` path
-(build template destination).
+(build template destination). You can also set a `hook`, which is run after
+the template is copied, which is useful with, for example, waybar, which needs
+to be restarted for the configuration changes to take effect.
 
 If the `source` is not absolute path, it automatically searches in the
 `templates` directory, which by default is in `~/.config/gecol/templates`
 on linux. The `target` uses home directory when the path is not absolute.
 
-You can add a template to the configuration like this:
+You can add a template to the configuration like this (example with waybar
+colors):
 
 ```toml
-[[template]]
-source = "some-config.json.template"
-target = "/home/user/.config/some-app/some-config.json"
+[templates.waybar-colors]
+source = "waybar-colors.css"
+target = "~/.config/waybar/colors.css"
+hook = "pkill -SIGUSR2 waybar"
 ```
 
 ## Templates
 
-By default the templates folder is at `~/.config/gecol/templates` if not
-configured otherwise. In the templates, you have access to a rich
+By default the templates folder is at `~/.config/gecol/templates` on linux if
+not configured otherwise. In the templates, you have access to a rich
 object-oriented color API:
 
 ```text
@@ -80,6 +92,10 @@ transparent_bg = "{{ background.hexa(0.8) }}"
 hover_color = "{{ background.lighten(0.1) }}"
 border = rgba({{ primary.rgb }}aa)
 ```
+
+You can check out my
+[`gecol` configuration](https://github.com/Martan03/dotfiles/tree/main/gecol)
+and take inspiration.
 
 ## Links
 

@@ -63,11 +63,10 @@ pub fn build_templates(
     Ok(())
 }
 
-/// Gets the jinja context with all the [`Theme`](crate::theme::Theme) colors
-/// in it.
+/// Gets the jinja context with all the [`Theme`] colors in it.
 ///
 /// This is used when building the templates in
-/// [`build_templates`](crate::template::build_template) and
+/// [`build_templates`] and
 /// [`Template::build`](crate::template::Template::build).
 pub fn jinja_context(theme: Theme) -> Value {
     context! {

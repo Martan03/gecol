@@ -54,14 +54,13 @@
 //!
 //! ## Configuration
 //!
-//! The [`Config`](crate::Config) struct allows fine-tuning of the extraction
-//! algorithm, such as saliency bonus, warmth bias and so on. You can read
-//! more about all the fine-tuning options in the [`Config`](crate::Config)
-//! documentation.
+//! The [`Config`] struct allows fine-tuning of the extraction algorithm, such 
+//! as saliency bonus, warmth bias and so on. You can read more about all the 
+//! fine-tuning options in the [`Config`] documentation.
 //!
-//! The [`Config`](crate::Config) also contains the templates configuration.
-//! For each template, you specify the `source` path (path to the template
-//! file) and the `target` path (built template destination).
+//! The [`Config`] also contains the templates configuration. For each
+//! template, you specify the `source` path (path to the template file) and the
+//! `target` path (built template destination).
 //!
 //! If the `source` is not absolute path, it automatically searches in the
 //! `templates` directory, which by default is in `~/.config/gecol/templates`
