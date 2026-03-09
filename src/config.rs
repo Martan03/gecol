@@ -44,6 +44,13 @@ pub struct Config {
     #[serde(default = "default_clusters")]
     pub clusters: usize,
 
+    // By how much the final cluster's vibrancy (chroma) is multiplied.
+    #[serde(rename = "vibrancy_bonus", default = "default_vibr_bonus")]
+    pub vibr_bonus: f32,
+    // By how much the final cluster's dominance (pixel mass) is multiplied.
+    #[serde(rename = "dominance_bonus", default = "default_dom_bonus")]
+    pub dom_bonus: f32,
+
     // List of templates to be built.
     #[serde(default)]
     pub templates: HashMap<String, Template>,
@@ -173,6 +180,8 @@ impl Default for Config {
             sal_thresh: Default::default(),
             sal_bonus: default_sal_bonus(),
             warmth_bonus: default_warmth_bonus(),
+            vibr_bonus: default_vibr_bonus(),
+            dom_bonus: default_dom_bonus(),
             clusters: default_clusters(),
             templates: Default::default(),
             templates_dir: Default::default(),
@@ -193,6 +202,8 @@ impl Hash for Config {
         self.sal_bonus.to_bits().hash(state);
         self.warmth_bonus.to_bits().hash(state);
         self.clusters.hash(state);
+        self.vibr_bonus.to_bits().hash(state);
+        self.dom_bonus.to_bits().hash(state);
     }
 }
 
@@ -209,13 +220,21 @@ fn default_val_thresh() -> f32 {
 }
 
 fn default_sal_bonus() -> f32 {
-    5.
+    1.5
 }
 
 fn default_warmth_bonus() -> f32 {
-    1.5
+    0.1
 }
 
 fn default_clusters() -> usize {
     16
+}
+
+fn default_vibr_bonus() -> f32 {
+    2.5
+}
+
+fn default_dom_bonus() -> f32 {
+    1.
 }

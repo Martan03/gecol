@@ -185,6 +185,7 @@ impl<'a> Extractor<'a> {
     fn get_best_col(&self, candids: Vec<ScoredPixel>) -> Option<(u8, u8, u8)> {
         let clusters = self.get_clusters(candids);
         let min_size = ((self.width * self.height) as f32 * 0.001) as usize;
+        let max_cnt = clusters.iter().map(|c| c.cnt).max().unwrap_or(1) as f32;
 
         let mut best = None;
         let mut max_score = -1.;
@@ -194,15 +195,27 @@ impl<'a> Extractor<'a> {
             }
 
             let avg_score = cluster.score / cluster.cnt as f32;
-            if avg_score > max_score {
-                max_score = avg_score;
+            let mass_score = (cluster.cnt as f32 / max_cnt).sqrt();
+            let mut score = avg_score * mass_score * self.config.dom_bonus;
+
+            let sab = cluster.best_lab.a.powi(2) + cluster.best_lab.b.powi(2);
+            let mut vibr_score = sab / 10000.;
+
+            let r = cluster.best_rgb.0 as f32 / 255.;
+            let g = cluster.best_rgb.1 as f32 / 255.;
+            let b = cluster.best_rgb.2 as f32 / 255.;
+            vibr_score *= r.max(g.max(b));
+
+            score += vibr_score * self.config.vibr_bonus;
+            if score > max_score {
+                max_score = score;
                 best = Some(cluster.best_rgb);
             }
         }
         best
     }
 
-    /// Gets [`ScoredClusters`] from using k-means clustring.
+    /// Gets [`ScoredCluster`]s from using k-means clustring.
     fn get_clusters(&self, candids: Vec<ScoredPixel>) -> Vec<ScoredCluster> {
         let labs: Vec<Lab> = candids.iter().map(|c| c.lab).collect();
         let k = self.config.clusters.min(labs.len());

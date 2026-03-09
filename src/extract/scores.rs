@@ -26,6 +26,7 @@ pub(crate) struct ScoredCluster {
     pub score: f32,
     pub max_score: f32,
     pub best_rgb: (u8, u8, u8),
+    pub best_lab: Lab,
 }
 
 impl ScoredCluster {
@@ -36,6 +37,7 @@ impl ScoredCluster {
         if pixel.score > self.max_score {
             self.max_score = pixel.score;
             self.best_rgb = pixel.rgb;
+            self.best_lab = pixel.lab;
         }
     }
 }
@@ -47,6 +49,7 @@ impl Default for ScoredCluster {
             score: Default::default(),
             max_score: -1.,
             best_rgb: Default::default(),
+            best_lab: Default::default(),
         }
     }
 }
