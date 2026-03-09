@@ -1,12 +1,13 @@
 use std::{
     fs::create_dir_all,
+    io::ErrorKind,
     path::PathBuf,
     process::{Command, ExitCode},
     time::Duration,
 };
 
 use gecol_core::{
-    Config,
+    Cache, Config,
     extract::Extractor,
     template::build_templates,
     theme::{Color, Theme},
@@ -43,6 +44,7 @@ fn run() -> Result<(), Error> {
         Some(Action::Run(ext)) => run_action(&args, ext),
         Some(Action::Extract(ext)) => extract(&args, ext),
         Some(Action::Config(conf)) => config(&args, conf),
+        Some(Action::ClearCache) => clear_cache(&args),
         None if args.should_quit => Ok(()),
         _ => Err("invalid usage. Type 'gecol -h' to display help.".into()),
     }
@@ -78,6 +80,24 @@ fn config(args: &Args, _conf: &args::config::Config) -> Result<(), Error> {
     Ok(())
 }
 
+fn clear_cache(args: &Args) -> Result<(), Error> {
+    let config = load_config(&args.config)?;
+
+    let cache_path = config.cache_dir.unwrap_or_else(Cache::file);
+    let msg = match std::fs::remove_file(&cache_path) {
+        Ok(_) => "Cache cleared successfully!",
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            "Cache was already empty."
+        }
+        Err(e) => return Err(e.into()),
+    };
+
+    if !args.quiet {
+        println!("{msg}");
+    }
+    Ok(())
+}
+
 fn extract_fn<F>(
     args: &Args,
     img: &Option<PathBuf>,
@@ -90,13 +110,15 @@ where
         return Err("invalid usage. Type 'gecol -h' to display help.".into());
     };
 
-    let config = match &args.config {
-        Some(path) => Config::load(path)?,
-        None => Config::load_default(),
-    };
+    let config = load_config(&args.config)?;
 
     let spinner = get_spinner(args.quiet);
-    let res = Extractor::extract_with_progress(img, &config, &spinner)?;
+    let res = if args.no_cache {
+        Extractor::extract_no_cache(img, &config, &spinner)?
+    } else {
+        Extractor::extract_with_progress(img, &config, &spinner)?
+    };
+
     if !args.quiet {
         println!();
     }
@@ -136,6 +158,13 @@ fn build(
         println!("\n{theme_str}");
     }
     Ok(())
+}
+
+fn load_config(path: &Option<PathBuf>) -> Result<Config, Error> {
+    match path {
+        Some(path) => Config::load(path).map_err(Into::into),
+        None => Ok(Config::load_default()),
+    }
 }
 
 fn get_spinner(quiet: bool) -> ProgressBar {

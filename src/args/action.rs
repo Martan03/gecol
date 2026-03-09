@@ -5,4 +5,5 @@ pub enum Action {
     Run(Run),
     Extract(Extract),
     Config(Config),
+    ClearCache,
 }

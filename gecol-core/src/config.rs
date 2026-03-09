@@ -63,6 +63,9 @@ pub struct Config {
     /// extraction.
     #[serde(default)]
     pub cache_dir: Option<PathBuf>,
+    /// Whether no color cache should be used.
+    #[serde(default)]
+    pub no_cache: bool,
 }
 
 impl Config {
@@ -186,6 +189,7 @@ impl Default for Config {
             templates: Default::default(),
             templates_dir: Default::default(),
             cache_dir: Default::default(),
+            no_cache: Default::default(),
         }
     }
 }

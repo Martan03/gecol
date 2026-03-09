@@ -13,6 +13,7 @@ pub struct Args {
     pub action: Option<Action>,
     pub config: Option<PathBuf>,
     pub quiet: bool,
+    pub no_cache: bool,
     pub should_quit: bool,
 }
 
@@ -38,6 +39,10 @@ impl Args {
                     let config = Config::parse(&mut args, &mut parsed)?;
                     parsed.action = Some(Action::Config(config));
                 }
+                "clear-cache" => {
+                    parsed.parse_generic(&mut args)?;
+                    parsed.action = Some(Action::ClearCache);
+                }
                 "-v" | "--version" => {
                     parsed.should_quit = true;
                     println!("gecol {}", Self::VERSION_NUMBER)
@@ -52,12 +57,22 @@ impl Args {
         Ok(parsed)
     }
 
+    pub fn parse_generic(&mut self, args: &mut Pareg) -> Result<(), Error> {
+        while let Some(arg) = args.next() {
+            match arg {
+                _ => self.shared_flags(args)?,
+            }
+        }
+        Ok(())
+    }
+
     /// Handles the shared flags across actions.
     pub fn shared_flags(&mut self, args: &mut Pareg) -> Result<(), Error> {
         let Some(arg) = args.cur() else { return Ok(()) };
         match arg {
             "-c" | "--config" => self.config = args.next_arg()?,
             "-q" | "--quiet" => self.quiet = true,
+            "--no-cache" => self.no_cache = true,
             arg => return Err(Self::unknown_arg(arg)),
         }
         Ok(())
@@ -91,6 +106,8 @@ A perception-aware accent color extractor and dynamic theme generator.
   {'y}config{'_} [config options] [options]
     Opens the configuration file.
 
+  {'y}clear-cache{'_} [options]
+
 {'g}Run options{'_}:
   {'y}-t  --template{'_} <name>:
     Builds only the given template. Can be used multiple times.
@@ -99,7 +116,7 @@ A perception-aware accent color extractor and dynamic theme generator.
   {'y}-p  --path{'_}
     Prints the default configuration file location.
 
-{'g}Global options{'_}:
+{'g}Options{'_}:
   These options can be used in any of the actions.
 
   {'y}-c  --config{'_} <file>
@@ -107,6 +124,9 @@ A perception-aware accent color extractor and dynamic theme generator.
 
   {'y}-q  --quiet{'_}
     Turns off unnecessary printing to terminal.
+
+  {'y}--no-cache{'_}
+    Disables using the color cache.
 
 {'g}Flags{'_}:
   {'y}-h  --help{'_}

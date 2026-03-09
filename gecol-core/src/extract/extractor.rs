@@ -51,6 +51,10 @@ impl<'a> Extractor<'a> {
     where
         P: AsRef<Path>,
     {
+        if config.no_cache {
+            return Self::extract_no_cache(path, config, spinner);
+        }
+
         spinner.set_message("Checking cache...");
         let cache_file =
             config.cache_dir.to_owned().unwrap_or_else(Cache::file);
@@ -63,7 +67,7 @@ impl<'a> Extractor<'a> {
             return Ok(Some(color));
         }
 
-        let color = Self::inner_extract(path, config, spinner)?;
+        let color = Self::extract_no_cache(path, config, spinner)?;
         if let Some(col) = color {
             cache.entries.insert(key, col);
             _ = cache.save(&cache_file);
@@ -73,7 +77,14 @@ impl<'a> Extractor<'a> {
         Ok(color)
     }
 
-    fn inner_extract<P>(
+    /// Extracts the accent color from image on the given path with the
+    /// progress reporting.
+    ///
+    /// When no sufficient color is found, it returns `None`.
+    ///
+    /// This doesn't use cache. It is recommended using cache though, because
+    /// it speeds up the repeated extraction a lot.
+    pub fn extract_no_cache<P>(
         path: P,
         config: &'a Config,
         spinner: &ProgressBar,
