@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 /// # Example
 ///
 /// ```rust
-/// use gecol::theme::Color;
+/// use gecol_core::theme::Color;
 ///
 /// let color = Color::from_rgb(67, 69, 42);
 ///
@@ -101,11 +101,15 @@ impl Color {
     /// It reduces the current lightness by 1 - `amount` percent (e.g. 0.2
     /// for a 20% dimmer color)
     pub fn dim(&self, amount: f32) -> Self {
-        let mut color = self.0;
-        let factor = (1. - amount).clamp(0., 1.);
+        if amount < 0. {
+            return self.brighten(-amount);
+        }
 
-        color.l *= factor;
-        color.chroma *= factor;
+        let mut color = self.0;
+        let factor = (1. - amount).max(0.);
+
+        color.l = (color.l * factor).clamp(0., 1.);
+        color.chroma = (color.chroma * factor).max(0.);
         Self(color)
     }
 
@@ -179,7 +183,7 @@ mod tests {
 
     #[test]
     fn dim() {
-        let color = Color(Oklch::new(0.4, 0.6, 0.9)).dim(-2.0);
+        let color = Color(Oklch::new(0.4, 0.6, 0.9)).dim(-3.0);
         assert_eq!(color.0.l, 1.);
         let color = color.dim(0.5);
         assert_eq!(color.0.l, 0.5);

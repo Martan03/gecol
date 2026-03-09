@@ -13,7 +13,7 @@ use crate::theme::Color;
 /// # Example
 ///
 /// ```rust
-/// use gecol::theme::Theme;
+/// use gecol_core::theme::Theme;
 ///
 /// // Generates dark theme
 /// let theme = Theme::dark((155, 155, 0));

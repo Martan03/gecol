@@ -1,13 +1,23 @@
 //! A perception-aware accent color extractor and dynamic theme generator.
 //!
+//! ## Table of Contents
+//!
+//! - [How to get it](#how-to-get-it)
+//!     - [With cargo](#with-cargo)
+//! - [Example](#example)
+//!     - [Full pipeline](#full-pipeline)
+//!     - [Template syntax](#template-syntax)
+//! - [Configuration](#configuration)
+//! - [Links](#links)
+//!
 //! ## How to get it
 //!
-//! This crate is available on [crates.io](https://crates.io/crates/gecol).
+//! This crate is available on [crates.io](https://crates.io/crates/gecol-core).
 //!
 //! ### With cargo
 //!
 //! ```bash
-//! cargo add gecol
+//! cargo add gecol-core
 //! ```
 //!
 //! ## Example
@@ -18,10 +28,11 @@
 //! a few lines of code:
 //!
 //! ```rust,no_run
-//! use gecol::prelude::*;
-//! # fn get_templates() -> Vec<Template> { vec![] }
+//! use gecol_core::prelude::*;
+//! # use std::collections::HashMap;
+//! # fn get_templates() -> HashMap<String, Template> { HashMap::new() }
 //!
-//! # fn main() -> Result<(), gecol::Error> {
+//! # fn main() -> Result<(), gecol_core::Error> {
 //! let config = Config::default();
 //!
 //! // 1. Extract the color from the given image
@@ -34,7 +45,7 @@
 //!     template.build(&theme)?;
 //!
 //!     // Or when having multiple templates (more efficient)
-//!     let templates: Vec<Template> = get_templates();
+//!     let templates: HashMap<String, Template> = get_templates();
 //!     build_templates(&templates, theme)?;
 //! }
 //! # Ok(())
@@ -54,8 +65,8 @@
 //!
 //! ## Configuration
 //!
-//! The [`Config`] struct allows fine-tuning of the extraction algorithm, such 
-//! as saliency bonus, warmth bias and so on. You can read more about all the 
+//! The [`Config`] struct allows fine-tuning of the extraction algorithm, such
+//! as saliency bonus, warmth bias and so on. You can read more about all the
 //! fine-tuning options in the [`Config`] documentation.
 //!
 //! The [`Config`] also contains the templates configuration. For each

@@ -1,9 +1,8 @@
 use std::path::PathBuf;
 
-use gecol::Error;
 use pareg::Pareg;
 
-use crate::args::args_struct::Args;
+use crate::{args::args_struct::Args, error::Error};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Extract {

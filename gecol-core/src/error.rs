@@ -6,9 +6,13 @@ pub enum Error {
     #[error(transparent)]
     IO(#[from] std::io::Error),
     #[error(transparent)]
-    Gecol(#[from] gecol_core::Error),
+    Img(#[from] image::ImageError),
     #[error(transparent)]
-    Pareg(#[from] pareg::ArgError),
+    TomlDe(#[from] toml::de::Error),
+    #[error(transparent)]
+    TomlSer(#[from] toml::ser::Error),
+    #[error(transparent)]
+    MiniJinja(#[from] minijinja::Error),
     #[error("{0}")]
     Msg(String),
 }

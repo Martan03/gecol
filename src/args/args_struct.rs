@@ -1,10 +1,12 @@
 use std::path::PathBuf;
 
-use gecol::Error;
 use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 
-use crate::args::{action::Action, config::Config, extract::Extract};
+use crate::{
+    args::{action::Action, config::Config, extract::Extract},
+    error::Error,
+};
 
 #[derive(Debug, Clone, Default)]
 pub struct Args {

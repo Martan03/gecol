@@ -1,4 +1,4 @@
-use gecol::Error;
+use crate::error::Error;
 use pareg::Pareg;
 
 use crate::args::args_struct::Args;
@@ -12,7 +12,10 @@ impl Config {
         while let Some(arg) = args.next() {
             match arg {
                 "-p" | "--path" => {
-                    println!("{}", gecol::Config::file().to_string_lossy());
+                    println!(
+                        "{}",
+                        gecol_core::Config::file().to_string_lossy()
+                    );
                     pargs.should_quit = true;
                     return Ok(parsed);
                 }

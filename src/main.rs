@@ -4,8 +4,8 @@ use std::{
     time::Duration,
 };
 
-use gecol::{
-    Config, Error,
+use gecol_core::{
+    Config,
     extract::Extractor,
     template::build_templates,
     theme::{Color, Theme},
@@ -14,9 +14,13 @@ use indicatif::{ProgressBar, ProgressStyle};
 use pareg::Pareg;
 use termal::eprintcln;
 
-use crate::args::{action::Action, args_struct::Args, extract::Extract};
+use crate::{
+    args::{action::Action, args_struct::Args, extract::Extract},
+    error::Error,
+};
 
 pub mod args;
+pub mod error;
 
 fn main() -> ExitCode {
     match run() {
