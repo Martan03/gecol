@@ -1,8 +1,8 @@
-use crate::args::{config::Config, extract::Extract};
+use crate::args::{config::Config, extract::Extract, run::Run};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
-    Run(Extract),
+    Run(Run),
     Extract(Extract),
     Config(Config),
 }

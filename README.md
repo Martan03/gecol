@@ -29,11 +29,12 @@ If you want to use this in your project, you can use the rust crate. You can
 add this crate to your project using `cargo`:
 
 ```bash
-cargo add gecol
+cargo add gecol-core
 ```
 
-You can read more about the library usage in the documentation at
-[docs.rs](https://docs.rs/gecol/latest/gecol/).
+You can read more about the library usage in the crate
+[README](https://github.com/Martan03/gecol/blob/master/gecol-core/README.md) or
+the documentation at [docs.rs](https://docs.rs/gecol-core/latest/gecol-core/).
 
 ## Usage
 

@@ -4,7 +4,7 @@ use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 
 use crate::{
-    args::{action::Action, config::Config, extract::Extract},
+    args::{action::Action, config::Config, extract::Extract, run::Run},
     error::Error,
 };
 
@@ -27,8 +27,8 @@ impl Args {
         if let Some(arg) = args.next() {
             match arg {
                 "run" => {
-                    let extract = Extract::parse(&mut args, &mut parsed)?;
-                    parsed.action = Some(Action::Run(extract));
+                    let run = Run::parse(&mut args, &mut parsed)?;
+                    parsed.action = Some(Action::Run(run));
                 }
                 "extract" => {
                     let extract = Extract::parse(&mut args, &mut parsed)?;
@@ -79,26 +79,30 @@ impl Args {
 A perception-aware accent color extractor and dynamic theme generator.
 
 {'g}Usage{'_}:
-  {'c}gecol{'_} [action] [{'y}options{'_}]
+  {'c}gecol{'_} <action> [{'y}options{'_}]
 
 {'g}Actions{'_}:
-  {'y}run{'_} <IMAGE> [options]
+  {'y}run{'_} <image> [run options] [options]
     Runs the color extractor on the given image and builds the templates.
 
-  {'y}extract{'_} <IMAGE> [options]
+  {'y}extract{'_} <image> [options]
     Extracts the color from the given image.
 
   {'y}config{'_} [config options] [options]
     Opens the configuration file.
 
+{'g}Run options{'_}:
+  {'y}-t  --template{'_} <name>:
+    Builds only the given template. Can be used multiple times.
+
 {'g}Config options{'_}:
   {'y}-p  --path{'_}
     Prints the default configuration file location.
 
-{'g}Option{'_}:
+{'g}Global options{'_}:
   These options can be used in any of the actions.
 
-  {'y}-c  --config{'_} <FILE>
+  {'y}-c  --config{'_} <file>
     Specifies custom config path
 
   {'y}-q  --quiet{'_}

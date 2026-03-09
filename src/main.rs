@@ -1,5 +1,6 @@
 use std::{
     fs::create_dir_all,
+    path::PathBuf,
     process::{Command, ExitCode},
     time::Duration,
 };
@@ -15,7 +16,7 @@ use pareg::Pareg;
 use termal::eprintcln;
 
 use crate::{
-    args::{action::Action, args_struct::Args, extract::Extract},
+    args::{action::Action, args_struct::Args, extract::Extract, run::Run},
     error::Error,
 };
 
@@ -47,12 +48,12 @@ fn run() -> Result<(), Error> {
     }
 }
 
-fn run_action(args: &Args, extract: &Extract) -> Result<(), Error> {
-    extract_fn(args, extract, build)
+fn run_action(args: &Args, run: &Run) -> Result<(), Error> {
+    extract_fn(args, &run.img, |conf, col| build(args, run, conf, col))
 }
 
 fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
-    extract_fn(args, extract, |_, _, color| {
+    extract_fn(args, &extract.img, |_, color| {
         let color: Color = color.into();
         if !args.quiet {
             print!("{}  \x1b[0m ", color);
@@ -77,11 +78,15 @@ fn config(args: &Args, _conf: &args::config::Config) -> Result<(), Error> {
     Ok(())
 }
 
-fn extract_fn<F>(args: &Args, ext: &Extract, color_fn: F) -> Result<(), Error>
+fn extract_fn<F>(
+    args: &Args,
+    img: &Option<PathBuf>,
+    color_fn: F,
+) -> Result<(), Error>
 where
-    F: Fn(&Args, Config, (u8, u8, u8)) -> Result<(), Error>,
+    F: Fn(Config, (u8, u8, u8)) -> Result<(), Error>,
 {
-    let Some(img) = &ext.img else {
+    let Some(img) = img else {
         return Err("invalid usage. Type 'gecol -h' to display help.".into());
     };
 
@@ -97,12 +102,17 @@ where
     }
 
     if let Some(color) = res {
-        color_fn(args, config, color)?;
+        color_fn(config, color)?;
     }
     Ok(())
 }
 
-fn build(args: &Args, conf: Config, color: (u8, u8, u8)) -> Result<(), Error> {
+fn build(
+    args: &Args,
+    ext: &Run,
+    mut conf: Config,
+    color: (u8, u8, u8),
+) -> Result<(), Error> {
     let spinner = get_spinner(args.quiet);
 
     spinner.set_message("Generating theme...");
@@ -110,6 +120,15 @@ fn build(args: &Args, conf: Config, color: (u8, u8, u8)) -> Result<(), Error> {
     let theme_str = format!("{theme}");
 
     spinner.set_message("Building templates...");
+    if !ext.templates.is_empty() {
+        conf.templates
+            .retain(|name, _| ext.templates.contains(name));
+        if conf.templates.is_empty() {
+            spinner
+                .finish_with_message("No matching templates found in config!");
+            return Ok(());
+        }
+    }
     build_templates(&conf.templates, theme)?;
 
     spinner.finish_with_message("Templates build!");
