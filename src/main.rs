@@ -6,6 +6,7 @@ use std::{
     time::Duration,
 };
 
+use clap::Parser;
 use gecol_core::{
     Cache, Config,
     extract::Extractor,
@@ -13,13 +14,12 @@ use gecol_core::{
     theme::{Color, Theme},
 };
 use indicatif::{ProgressBar, ProgressStyle};
-use pareg::Pareg;
 use termal::eprintcln;
 
 use crate::{
     args::{
-        action::Action, args_struct::Args, build::Build, extract::Extract,
-        run::Run,
+        action::{Action, Build, Extract, Preview, Run, parse_hex_col},
+        args_struct::Args,
     },
     error::Error,
 };
@@ -38,29 +38,36 @@ fn main() -> ExitCode {
 }
 
 fn run() -> Result<(), Error> {
-    let args = Args::parse(Pareg::args())?;
-    if args.should_quit {
-        return Ok(());
-    }
+    let args = Args::parse();
 
-    match &args.action {
-        Some(Action::Run(ext)) => run_action(&args, ext),
-        Some(Action::Extract(ext)) => extract(&args, ext),
-        Some(Action::Build(build)) => build_action(&args, build),
-        Some(Action::Config(conf)) => config(&args, conf),
-        Some(Action::ClearCache) => clear_cache(&args),
-        None if args.should_quit => Ok(()),
-        _ => Err("invalid usage. Type 'gecol -h' to display help.".into()),
+    // if args.version {
+    //     Args::version();
+    //     return Ok(());
+    // }
+    // if args.help || args.action.is_none() {
+    //     Args::help();
+    //     return Ok(());
+    // }
+
+    match args.action.as_ref().unwrap() {
+        Action::Run(run_args) => handle_run(&args, run_args),
+        Action::Extract(ext_args) => handle_extract(&args, ext_args),
+        Action::Build(build_args) => handle_build(&args, build_args),
+        Action::Preview(prev_args) => handle_preview(&args, prev_args),
+        Action::List => handle_list(&args),
+        Action::Config => handle_config(&args),
+        Action::ClearCache => clear_cache(&args),
     }
 }
 
-fn run_action(args: &Args, run: &Run) -> Result<(), Error> {
-    extract_fn(args, &run.img, |conf, col| {
+fn handle_run(args: &Args, run: &Run) -> Result<(), Error> {
+    extract_fn(args, &run.img, |mut conf, col| {
+        conf.theme_type = run.theme.unwrap_or(conf.theme_type);
         build(args, conf, &run.templates, col)
     })
 }
 
-fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
+fn handle_extract(args: &Args, extract: &Extract) -> Result<(), Error> {
     extract_fn(args, &extract.img, |_, color| {
         let color: Color = color.into();
         if !args.quiet {
@@ -71,16 +78,46 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
     })
 }
 
-fn build_action(args: &Args, ext: &Build) -> Result<(), Error> {
-    let Some(color) = ext.color else {
-        return Err("invalid usage. Type 'gecol -h' to display help.".into());
-    };
-
-    let config = load_config(&args.config)?;
-    build(args, config, &ext.templates, color)
+fn handle_build(args: &Args, ext: &Build) -> Result<(), Error> {
+    let mut config = load_config(&args.config)?;
+    config.theme_type = ext.theme.unwrap_or(config.theme_type);
+    build(args, config, &ext.templates, ext.color)
 }
 
-fn config(args: &Args, _conf: &args::config::Config) -> Result<(), Error> {
+fn handle_preview(args: &Args, ext: &Preview) -> Result<(), Error> {
+    let mut config = load_config(&args.config)?;
+    config.theme_type = ext.theme.unwrap_or(config.theme_type);
+
+    let color = if let Ok(color) = parse_hex_col(&ext.target) {
+        color
+    } else {
+        let path = PathBuf::from(&ext.target);
+        extract_color(args, &path, &mut config)?
+    };
+
+    let theme = Theme::generate(config.theme_type, color);
+    println!("{theme}");
+    Ok(())
+}
+
+fn handle_list(args: &Args) -> Result<(), Error> {
+    let config = load_config(&args.config)?;
+    if config.templates.is_empty() {
+        println!("No templates found in you configuration file.");
+        return Ok(());
+    }
+
+    let mut keys: Vec<&String> = config.templates.keys().collect();
+    keys.sort();
+
+    println!("Available templates:");
+    for template in keys {
+        println!(" - {template}");
+    }
+    Ok(())
+}
+
+fn handle_config(args: &Args) -> Result<(), Error> {
     let editor = std::env::var("EDITOR").unwrap_or("vi".to_string());
     let file = args.config.to_owned().unwrap_or_else(Config::file);
 
@@ -113,36 +150,31 @@ fn clear_cache(args: &Args) -> Result<(), Error> {
     Ok(())
 }
 
-fn extract_fn<F>(
-    args: &Args,
-    img: &Option<PathBuf>,
-    color_fn: F,
-) -> Result<(), Error>
+fn extract_fn<F>(args: &Args, img: &PathBuf, color_fn: F) -> Result<(), Error>
 where
     F: Fn(Config, (u8, u8, u8)) -> Result<(), Error>,
 {
-    let Some(img) = img else {
-        return Err("invalid usage. Type 'gecol -h' to display help.".into());
-    };
-
     let mut config = load_config(&args.config)?;
-    config.no_cache = config.no_cache || args.no_cache;
+    let color = extract_color(args, img, &mut config)?;
+    color_fn(config, color)
+}
+
+fn extract_color(
+    args: &Args,
+    img: &PathBuf,
+    conf: &mut Config,
+) -> Result<(u8, u8, u8), Error> {
+    conf.no_cache = conf.no_cache || args.no_cache;
 
     let spinner = get_spinner(args.quiet);
-    let res = Extractor::extract_with_progress(img, &config, &spinner)?;
-
+    let res = Extractor::extract_with_progress(img, conf, &spinner)?;
     if !args.quiet {
         println!();
     }
 
-    let Some(color) = res else {
-        return Err(
-            "Failed to extract sufficient color and no fallback color set"
-                .into(),
-        );
-    };
-    color_fn(config, color)?;
-    Ok(())
+    res.ok_or_else(|| {
+        "Failed to extract sufficient color and no fallback color set".into()
+    })
 }
 
 fn build(

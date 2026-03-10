@@ -7,8 +7,6 @@ pub enum Error {
     IO(#[from] std::io::Error),
     #[error(transparent)]
     Gecol(#[from] gecol_core::Error),
-    #[error(transparent)]
-    Pareg(#[from] pareg::ArgError),
     #[error("{0}")]
     Msg(String),
 }

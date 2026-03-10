@@ -1,23 +1,25 @@
 use std::path::PathBuf;
 
-use pareg::{ArgErrKind, ArgError, Pareg};
+use clap::Parser;
 use termal::printcln;
 
-use crate::{
-    args::{
-        action::Action, build::Build, config::Config, extract::Extract,
-        run::Run,
-    },
-    error::Error,
-};
+use crate::args::action::Action;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Parser)]
+// #[command(disable_help_flag = true, disable_version_flag = true)]
 pub struct Args {
+    #[command(subcommand)]
     pub action: Option<Action>,
+    #[arg(short, long, global = true)]
     pub config: Option<PathBuf>,
+    #[arg(short, long, global = true)]
     pub quiet: bool,
+    #[arg(long, global = true)]
     pub no_cache: bool,
-    pub should_quit: bool,
+    // #[arg(short, long)]
+    // pub help: bool,
+    // #[arg(short, long)]
+    // pub version: bool,
 }
 
 impl Args {
@@ -26,71 +28,8 @@ impl Args {
         if let Some(v) = v { v } else { "unknown" }
     };
 
-    pub fn parse(mut args: Pareg) -> Result<Self, Error> {
-        let mut parsed = Self::default();
-        if let Some(arg) = args.next() {
-            match arg {
-                "run" => {
-                    let run = Run::parse(&mut args, &mut parsed)?;
-                    parsed.action = Some(Action::Run(run));
-                }
-                "extract" => {
-                    let extract = Extract::parse(&mut args, &mut parsed)?;
-                    parsed.action = Some(Action::Extract(extract));
-                }
-                "build" => {
-                    let build = Build::parse(&mut args, &mut parsed)?;
-                    parsed.action = Some(Action::Build(build));
-                }
-                "config" => {
-                    let config = Config::parse(&mut args, &mut parsed)?;
-                    parsed.action = Some(Action::Config(config));
-                }
-                "clear-cache" => {
-                    parsed.parse_generic(&mut args)?;
-                    parsed.action = Some(Action::ClearCache);
-                }
-                "-v" | "--version" => {
-                    parsed.should_quit = true;
-                    println!("gecol {}", Self::VERSION_NUMBER)
-                }
-                "h" | "-h" | "--help" => {
-                    parsed.should_quit = true;
-                    Self::help();
-                }
-                _ => return Err(Self::unknown_arg(arg)),
-            }
-        }
-        Ok(parsed)
-    }
-
-    pub fn parse_generic(&mut self, args: &mut Pareg) -> Result<(), Error> {
-        while let Some(arg) = args.next() {
-            match arg {
-                _ => self.shared_flags(args)?,
-            }
-        }
-        Ok(())
-    }
-
-    /// Handles the shared flags across actions.
-    pub fn shared_flags(&mut self, args: &mut Pareg) -> Result<(), Error> {
-        let Some(arg) = args.cur() else { return Ok(()) };
-        match arg {
-            "-c" | "--config" => self.config = args.next_arg()?,
-            "-q" | "--quiet" => self.quiet = true,
-            "--no-cache" => self.no_cache = true,
-            arg => return Err(Self::unknown_arg(arg)),
-        }
-        Ok(())
-    }
-
-    pub fn unknown_arg(arg: &str) -> Error {
-        Error::Pareg(ArgError::from_msg(
-            ArgErrKind::UnknownArgument,
-            "invalid argument",
-            arg,
-        ))
+    pub fn version() {
+        println!("gecol {}", Self::VERSION_NUMBER)
     }
 
     pub fn help() {
