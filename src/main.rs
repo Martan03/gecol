@@ -17,7 +17,10 @@ use pareg::Pareg;
 use termal::eprintcln;
 
 use crate::{
-    args::{action::Action, args_struct::Args, extract::Extract, run::Run},
+    args::{
+        action::Action, args_struct::Args, build::Build, extract::Extract,
+        run::Run,
+    },
     error::Error,
 };
 
@@ -43,6 +46,7 @@ fn run() -> Result<(), Error> {
     match &args.action {
         Some(Action::Run(ext)) => run_action(&args, ext),
         Some(Action::Extract(ext)) => extract(&args, ext),
+        Some(Action::Build(build)) => build_action(&args, build),
         Some(Action::Config(conf)) => config(&args, conf),
         Some(Action::ClearCache) => clear_cache(&args),
         None if args.should_quit => Ok(()),
@@ -51,7 +55,9 @@ fn run() -> Result<(), Error> {
 }
 
 fn run_action(args: &Args, run: &Run) -> Result<(), Error> {
-    extract_fn(args, &run.img, |conf, col| build(args, run, conf, col))
+    extract_fn(args, &run.img, |conf, col| {
+        build(args, conf, &run.templates, col)
+    })
 }
 
 fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
@@ -63,6 +69,15 @@ fn extract(args: &Args, extract: &Extract) -> Result<(), Error> {
         println!("{}", color.hex());
         Ok(())
     })
+}
+
+fn build_action(args: &Args, ext: &Build) -> Result<(), Error> {
+    let Some(color) = ext.color else {
+        return Err("invalid usage. Type 'gecol -h' to display help.".into());
+    };
+
+    let config = load_config(&args.config)?;
+    build(args, config, &ext.templates, color)
 }
 
 fn config(args: &Args, _conf: &args::config::Config) -> Result<(), Error> {
@@ -132,8 +147,8 @@ where
 
 fn build(
     args: &Args,
-    ext: &Run,
     mut conf: Config,
+    templates: &Vec<String>,
     color: (u8, u8, u8),
 ) -> Result<(), Error> {
     let spinner = get_spinner(args.quiet);
@@ -143,9 +158,8 @@ fn build(
     let theme_str = format!("{theme}");
 
     spinner.set_message("Building templates...");
-    if !ext.templates.is_empty() {
-        conf.templates
-            .retain(|name, _| ext.templates.contains(name));
+    if !templates.is_empty() {
+        conf.templates.retain(|name, _| templates.contains(name));
         if conf.templates.is_empty() {
             spinner
                 .finish_with_message("No matching templates found in config!");

@@ -4,7 +4,10 @@ use pareg::{ArgErrKind, ArgError, Pareg};
 use termal::printcln;
 
 use crate::{
-    args::{action::Action, config::Config, extract::Extract, run::Run},
+    args::{
+        action::Action, build::Build, config::Config, extract::Extract,
+        run::Run,
+    },
     error::Error,
 };
 
@@ -34,6 +37,10 @@ impl Args {
                 "extract" => {
                     let extract = Extract::parse(&mut args, &mut parsed)?;
                     parsed.action = Some(Action::Extract(extract));
+                }
+                "build" => {
+                    let build = Build::parse(&mut args, &mut parsed)?;
+                    parsed.action = Some(Action::Build(build));
                 }
                 "config" => {
                     let config = Config::parse(&mut args, &mut parsed)?;
@@ -102,6 +109,9 @@ A perception-aware accent color extractor and dynamic theme generator.
 
   {'y}extract{'_} <image> [options]
     Extracts the color from the given image.
+
+  {'y}build{'_} <color> [run options] [options]
+    Builds the templates with given color.
 
   {'y}config{'_} [config options] [options]
     Opens the configuration file.
