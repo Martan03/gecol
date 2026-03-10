@@ -110,22 +110,23 @@ where
         return Err("invalid usage. Type 'gecol -h' to display help.".into());
     };
 
-    let config = load_config(&args.config)?;
+    let mut config = load_config(&args.config)?;
+    config.no_cache = config.no_cache || args.no_cache;
 
     let spinner = get_spinner(args.quiet);
-    let res = if args.no_cache {
-        Extractor::extract_no_cache(img, &config, &spinner)?
-    } else {
-        Extractor::extract_with_progress(img, &config, &spinner)?
-    };
+    let res = Extractor::extract_with_progress(img, &config, &spinner)?;
 
     if !args.quiet {
         println!();
     }
 
-    if let Some(color) = res {
-        color_fn(config, color)?;
-    }
+    let Some(color) = res else {
+        return Err(
+            "Failed to extract sufficient color and no fallback color set"
+                .into(),
+        );
+    };
+    color_fn(config, color)?;
     Ok(())
 }
 

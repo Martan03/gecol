@@ -51,6 +51,10 @@ pub struct Config {
     #[serde(rename = "dominance_bonus", default = "default_dom_bonus")]
     pub dom_bonus: f32,
 
+    // Fallback color when extraction fails to extract a color.
+    #[serde(default)]
+    pub fallback_color: Option<String>,
+
     // List of templates to be built.
     #[serde(default)]
     pub templates: HashMap<String, Template>,
@@ -137,6 +141,23 @@ impl Config {
         }
     }
 
+    /// Gets the fallback color as RGB tuple. Returns `None` if conversion
+    /// fails or fallback color was not set.
+    pub fn fallback_color(&self) -> Option<(u8, u8, u8)> {
+        let hex = self.fallback_color.as_ref()?.trim_start_matches('#');
+        if hex.len() == 6 {
+            if let (Ok(r), Ok(g), Ok(b)) = (
+                u8::from_str_radix(&hex[0..2], 16),
+                u8::from_str_radix(&hex[2..4], 16),
+                u8::from_str_radix(&hex[4..6], 16),
+            ) {
+                return Some((r, g, b));
+            }
+        }
+
+        return None;
+    }
+
     /// Gets the default config file path.
     ///
     /// It uses the [`Config::dir`] to get the config directory, followed
@@ -186,6 +207,7 @@ impl Default for Config {
             vibr_bonus: default_vibr_bonus(),
             dom_bonus: default_dom_bonus(),
             clusters: default_clusters(),
+            fallback_color: Default::default(),
             templates: Default::default(),
             templates_dir: Default::default(),
             cache_dir: Default::default(),

@@ -2,7 +2,7 @@ use std::path::Path;
 
 use image::{DynamicImage, RgbImage, imageops::FilterType};
 use imgref::Img;
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 use kmeans_colors::get_kmeans;
 use mss_saliency::maximum_symmetric_surround_saliency;
 use palette::{FromColor, Hsv, IntoColor, Lab, Srgb};
@@ -28,7 +28,7 @@ pub struct Extractor<'a> {
 impl<'a> Extractor<'a> {
     /// Extracts the accent color from image on the given path.
     ///
-    /// When no sufficient color is found, it returns `None`.
+    /// When no sufficient color is found, it returns the set fallback color.
     pub fn extract<P>(
         path: P,
         config: &'a Config,
@@ -42,7 +42,7 @@ impl<'a> Extractor<'a> {
     /// Extracts the accent color from image on the given path with the
     /// progress reporting.
     ///
-    /// When no sufficient color is found, it returns `None`.
+    /// When no sufficient color is found, it returns the set fallback color.
     pub fn extract_with_progress<P>(
         path: P,
         config: &'a Config,
@@ -52,7 +52,7 @@ impl<'a> Extractor<'a> {
         P: AsRef<Path>,
     {
         if config.no_cache {
-            return Self::extract_no_cache(path, config, spinner);
+            return Self::inner_extract(path, config, spinner);
         }
 
         spinner.set_message("Checking cache...");
@@ -67,7 +67,7 @@ impl<'a> Extractor<'a> {
             return Ok(Some(color));
         }
 
-        let color = Self::extract_no_cache(path, config, spinner)?;
+        let color = Self::inner_extract(path, config, spinner)?;
         if let Some(col) = color {
             cache.entries.insert(key, col);
             _ = cache.save(&cache_file);
@@ -77,14 +77,7 @@ impl<'a> Extractor<'a> {
         Ok(color)
     }
 
-    /// Extracts the accent color from image on the given path with the
-    /// progress reporting.
-    ///
-    /// When no sufficient color is found, it returns `None`.
-    ///
-    /// This doesn't use cache. It is recommended using cache though, because
-    /// it speeds up the repeated extraction a lot.
-    pub fn extract_no_cache<P>(
+    fn inner_extract<P>(
         path: P,
         config: &'a Config,
         spinner: &ProgressBar,
@@ -110,9 +103,18 @@ impl<'a> Extractor<'a> {
 
         let rgb_img = img.to_rgb8();
 
-        let candidates =
+        let candids =
             extractor.get_candidates(&rgb_img, &sal_map, is_sal_worth);
-        Ok(extractor.get_best_col(candidates))
+        let col = extractor
+            .get_best_col(candids)
+            .or_else(|| config.fallback_color());
+
+        if col.is_some() {
+            spinner.finish_with_message("Color extracted!");
+        } else {
+            Self::spinner_err(spinner, "Failed to extract sufficient color.");
+        }
+        Ok(col)
     }
 
     /// Resizes the image only if new dimensions are provided.
@@ -238,6 +240,14 @@ impl<'a> Extractor<'a> {
             clusters[cid as usize].push(&candids[i]);
         }
         clusters
+    }
+
+    fn spinner_err(spinner: &ProgressBar, msg: &str) {
+        spinner.set_style(
+            ProgressStyle::with_template("{prefix:.red} {msg}").unwrap(),
+        );
+        spinner.set_prefix("✗");
+        spinner.abandon_with_message(msg.to_owned());
     }
 
     #[cfg(debug_assertions)]
