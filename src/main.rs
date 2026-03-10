@@ -139,7 +139,7 @@ fn build(
     let spinner = get_spinner(args.quiet);
 
     spinner.set_message("Generating theme...");
-    let theme = Theme::dark(color);
+    let theme = Theme::generate(conf.theme_type, color);
     let theme_str = format!("{theme}");
 
     spinner.set_message("Building templates...");

@@ -6,7 +6,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{error::Error, template::Template};
+use crate::{error::Error, template::Template, theme::ThemeType};
 
 /// Holds all the gecol configuration.
 #[derive(Debug, Serialize, Deserialize)]
@@ -54,6 +54,9 @@ pub struct Config {
     // Fallback color when extraction fails to extract a color.
     #[serde(default)]
     pub fallback_color: Option<String>,
+    // Which theme type to use. Visit [`ThemeType`] to see all the variants.
+    #[serde(default)]
+    pub theme_type: ThemeType,
 
     // List of templates to be built.
     #[serde(default)]
@@ -208,6 +211,7 @@ impl Default for Config {
             dom_bonus: default_dom_bonus(),
             clusters: default_clusters(),
             fallback_color: Default::default(),
+            theme_type: Default::default(),
             templates: Default::default(),
             templates_dir: Default::default(),
             cache_dir: Default::default(),
