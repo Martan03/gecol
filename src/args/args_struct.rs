@@ -6,7 +6,7 @@ use termal::printcln;
 use crate::args::action::Action;
 
 #[derive(Debug, Clone, Default, Parser)]
-// #[command(disable_help_flag = true, disable_version_flag = true)]
+#[command(disable_help_flag = true, disable_version_flag = true)]
 pub struct Args {
     #[command(subcommand)]
     pub action: Option<Action>,
@@ -16,10 +16,10 @@ pub struct Args {
     pub quiet: bool,
     #[arg(long, global = true)]
     pub no_cache: bool,
-    // #[arg(short, long)]
-    // pub help: bool,
-    // #[arg(short, long)]
-    // pub version: bool,
+    #[arg(short, long, exclusive = true)]
+    pub help: bool,
+    #[arg(short, long, exclusive = true)]
+    pub version: bool,
 }
 
 impl Args {
@@ -35,7 +35,7 @@ impl Args {
     pub fn help() {
         printcln!(
             "Welcome to {'g}gecol{'_} by {}{'_}
-{'bl}Version {}{'_}
+{'gr}Version {}{'_}
 
 A perception-aware accent color extractor and dynamic theme generator.
 
@@ -43,14 +43,12 @@ A perception-aware accent color extractor and dynamic theme generator.
   {'c}gecol{'_} <action> [{'y}options{'_}]
 
 {'g}Actions{'_}:
-  {'y}run{'_} <image> [run options] [options]
-    Runs the color extractor on the given image and builds the templates.
+  {'y}run{'_} <image|hex_color> [run options] [options]
+    Extracts a color from an image, or uses given color, to generate a theme
+    and build templates.
 
-  {'y}extract{'_} <image> [options]
-    Extracts the color from the given image.
-
-  {'y}build{'_} <color> [run options] [options]
-    Builds the templates with given color.
+  {'y}list{'_} [options]
+    Lists all the configured templates.
 
   {'y}config{'_} [config options] [options]
     Opens the configuration file.
@@ -58,8 +56,23 @@ A perception-aware accent color extractor and dynamic theme generator.
   {'y}clear-cache{'_} [options]
 
 {'g}Run options{'_}:
-  {'y}-t  --template{'_} <name>:
+  <image|hex_color>
+    The target image path or a hex color (e.g. \"#3acbaf\"). If image, runs
+    the color extraction.
+
+  {'y}-t  --template{'_} <name>
     Builds only the given template. Can be used multiple times.
+
+  {'y}-T  --theme{'_} <light|dark>
+    Overrides the theme type for this run.
+
+  {'y}--skip-build{'_}
+    Skips building the templates, prints generated theme.
+    {'gr}(Conflicts with --extract-only, --template){'_}
+
+  {'y}--extract-only{'_}
+    Only extracts and prints color from the image input.
+    {'gr}(Conflicts with --skip-build, --template, --theme){'_}
 
 {'g}Config options{'_}:
   {'y}-p  --path{'_}

@@ -14,11 +14,11 @@ use gecol_core::{
     theme::{Color, Theme},
 };
 use indicatif::{ProgressBar, ProgressStyle};
-use termal::eprintcln;
+use termal::{eprintcln, formatc};
 
 use crate::{
     args::{
-        action::{Action, Build, Extract, Preview, Run, parse_hex_col},
+        action::{Action, Run, parse_hex_col},
         args_struct::Args,
     },
     error::Error,
@@ -40,20 +40,17 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Error> {
     let args = Args::parse();
 
-    // if args.version {
-    //     Args::version();
-    //     return Ok(());
-    // }
-    // if args.help || args.action.is_none() {
-    //     Args::help();
-    //     return Ok(());
-    // }
+    if args.version {
+        Args::version();
+        return Ok(());
+    }
+    if args.help || args.action.is_none() {
+        Args::help();
+        return Ok(());
+    }
 
     match args.action.as_ref().unwrap() {
         Action::Run(run_args) => handle_run(&args, run_args),
-        Action::Extract(ext_args) => handle_extract(&args, ext_args),
-        Action::Build(build_args) => handle_build(&args, build_args),
-        Action::Preview(prev_args) => handle_preview(&args, prev_args),
         Action::List => handle_list(&args),
         Action::Config => handle_config(&args),
         Action::ClearCache => clear_cache(&args),
@@ -61,43 +58,46 @@ fn run() -> Result<(), Error> {
 }
 
 fn handle_run(args: &Args, run: &Run) -> Result<(), Error> {
-    extract_fn(args, &run.img, |mut conf, col| {
-        conf.theme_type = run.theme.unwrap_or(conf.theme_type);
-        build(args, conf, &run.templates, col)
-    })
-}
-
-fn handle_extract(args: &Args, extract: &Extract) -> Result<(), Error> {
-    extract_fn(args, &extract.img, |_, color| {
-        let color: Color = color.into();
-        if !args.quiet {
-            print!("{}  \x1b[0m ", color);
-        }
-        println!("{}", color.hex());
-        Ok(())
-    })
-}
-
-fn handle_build(args: &Args, ext: &Build) -> Result<(), Error> {
     let mut config = load_config(&args.config)?;
-    config.theme_type = ext.theme.unwrap_or(config.theme_type);
-    build(args, config, &ext.templates, ext.color)
-}
+    config.theme_type = run.theme.unwrap_or(config.theme_type);
 
-fn handle_preview(args: &Args, ext: &Preview) -> Result<(), Error> {
-    let mut config = load_config(&args.config)?;
-    config.theme_type = ext.theme.unwrap_or(config.theme_type);
-
-    let color = if let Ok(color) = parse_hex_col(&ext.target) {
-        color
+    let (color, color_input) = if let Ok(color) = parse_hex_col(&run.target) {
+        (color, true)
     } else {
-        let path = PathBuf::from(&ext.target);
-        extract_color(args, &path, &mut config)?
+        let path = PathBuf::from(&run.target);
+        (extract_color(args, &path, &mut config)?, false)
     };
 
+    if run.extract_only {
+        if color_input {
+            return Err(formatc!(
+                "'{'dy}--extract-only{'_}' expects image as input, color given."
+            )
+            .into());
+        }
+        extract_only(args, color);
+        return Ok(());
+    }
+
     let theme = Theme::generate(config.theme_type, color);
-    println!("{theme}");
+    let theme_str = theme.to_string();
+    if !run.skip_build {
+        build(args, config, &run.templates, theme)?;
+    }
+
+    if run.skip_build || !args.quiet {
+        println!("{theme_str}");
+    }
+
     Ok(())
+}
+
+fn extract_only(args: &Args, color: (u8, u8, u8)) {
+    let color: Color = color.into();
+    if !args.quiet {
+        print!("{}  \x1b[0m ", color);
+    }
+    println!("{}", color.hex());
 }
 
 fn handle_list(args: &Args) -> Result<(), Error> {
@@ -150,15 +150,6 @@ fn clear_cache(args: &Args) -> Result<(), Error> {
     Ok(())
 }
 
-fn extract_fn<F>(args: &Args, img: &PathBuf, color_fn: F) -> Result<(), Error>
-where
-    F: Fn(Config, (u8, u8, u8)) -> Result<(), Error>,
-{
-    let mut config = load_config(&args.config)?;
-    let color = extract_color(args, img, &mut config)?;
-    color_fn(config, color)
-}
-
 fn extract_color(
     args: &Args,
     img: &PathBuf,
@@ -181,13 +172,9 @@ fn build(
     args: &Args,
     mut conf: Config,
     templates: &Vec<String>,
-    color: (u8, u8, u8),
+    theme: Theme,
 ) -> Result<(), Error> {
     let spinner = get_spinner(args.quiet);
-
-    spinner.set_message("Generating theme...");
-    let theme = Theme::generate(conf.theme_type, color);
-    let theme_str = format!("{theme}");
 
     spinner.set_message("Building templates...");
     if !templates.is_empty() {
@@ -201,9 +188,6 @@ fn build(
     build_templates(&conf.templates, theme)?;
 
     spinner.finish_with_message("Templates build!");
-    if !args.quiet {
-        println!("\n{theme_str}");
-    }
     Ok(())
 }
 
