@@ -24,7 +24,7 @@ impl FromStr for ThemeType {
         match s.to_lowercase().as_str() {
             "dark" => Ok(ThemeType::Dark),
             "light" => Ok(ThemeType::Light),
-            _ => Err(format!("Invalid theme type.")),
+            _ => Err("Invalid theme type.".to_owned()),
         }
     }
 }

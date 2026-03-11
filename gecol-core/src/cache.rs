@@ -6,7 +6,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Config, Error};
+use crate::{Error, extract::ExtractionConfig};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Cache {
@@ -61,7 +61,7 @@ impl Cache {
     /// This is done so that any change in config, that would effect the
     /// extracted color, is detected. It also can detect the image being
     /// modified.
-    pub fn key<P>(config: &Config, image: P) -> Result<String, Error>
+    pub fn key<P>(config: &ExtractionConfig, image: P) -> Result<String, Error>
     where
         P: AsRef<Path>,
     {

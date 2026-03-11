@@ -14,7 +14,10 @@ resolver = "2"
 
 [dependencies]
 clap = { version = "4.5.60", features = ["color", "derive"] }
+dirs = "6.0.0"
 gecol-core = { path = "gecol-core", version = "0.1.0" }
 indicatif = "0.18.4"
+serde = { version = "1.0.228", features = ["derive"] }
 termal = "4.2.1"
 thiserror = "2.0.18"
+toml = "1.0.6"

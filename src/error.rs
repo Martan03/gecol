@@ -7,6 +7,10 @@ pub enum Error {
     IO(#[from] std::io::Error),
     #[error(transparent)]
     Gecol(#[from] gecol_core::Error),
+    #[error(transparent)]
+    TomlDe(#[from] toml::de::Error),
+    #[error(transparent)]
+    TomlSer(#[from] toml::ser::Error),
     #[error("{0}")]
     Msg(String),
 }

@@ -31,14 +31,14 @@ pub struct Run {
 
 pub fn parse_hex_col(val: &str) -> Result<(u8, u8, u8), String> {
     let hex = val.trim_start_matches('#');
-    if hex.len() == 6 {
-        if let (Ok(r), Ok(g), Ok(b)) = (
+    if hex.len() == 6
+        && let (Ok(r), Ok(g), Ok(b)) = (
             u8::from_str_radix(&hex[0..2], 16),
             u8::from_str_radix(&hex[2..4], 16),
             u8::from_str_radix(&hex[4..6], 16),
-        ) {
-            return Ok((r, g, b));
-        }
+        )
+    {
+        return Ok((r, g, b));
     }
 
     Err(format!(

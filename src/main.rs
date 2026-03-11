@@ -8,8 +8,7 @@ use std::{
 
 use clap::Parser;
 use gecol_core::{
-    Cache, Config,
-    extract::Extractor,
+    Cache,
     template::build_templates,
     theme::{Color, Theme},
 };
@@ -21,11 +20,15 @@ use crate::{
         action::{Action, Run, parse_hex_col},
         args_struct::Args,
     },
+    config::Config,
     error::Error,
+    extract::extract_color,
 };
 
 pub mod args;
+pub mod config;
 pub mod error;
+pub mod extract;
 
 fn main() -> ExitCode {
     match run() {
@@ -65,7 +68,7 @@ fn handle_run(args: &Args, run: &Run) -> Result<(), Error> {
         (color, true)
     } else {
         let path = PathBuf::from(&run.target);
-        (extract_color(args, &path, &mut config)?, false)
+        (extract_color(args, &mut config, &path)?, false)
     };
 
     if run.extract_only {
@@ -150,28 +153,10 @@ fn clear_cache(args: &Args) -> Result<(), Error> {
     Ok(())
 }
 
-fn extract_color(
-    args: &Args,
-    img: &PathBuf,
-    conf: &mut Config,
-) -> Result<(u8, u8, u8), Error> {
-    conf.no_cache = conf.no_cache || args.no_cache;
-
-    let spinner = get_spinner(args.quiet);
-    let res = Extractor::extract_with_progress(img, conf, &spinner)?;
-    if !args.quiet {
-        println!();
-    }
-
-    res.ok_or_else(|| {
-        "Failed to extract sufficient color and no fallback color set".into()
-    })
-}
-
 fn build(
     args: &Args,
     mut conf: Config,
-    templates: &Vec<String>,
+    templates: &[String],
     theme: Theme,
 ) -> Result<(), Error> {
     let spinner = get_spinner(args.quiet);
@@ -188,17 +173,20 @@ fn build(
     build_templates(&conf.templates, theme)?;
 
     spinner.finish_with_message("Templates build!");
+    if !args.quiet {
+        println!();
+    }
     Ok(())
 }
 
 fn load_config(path: &Option<PathBuf>) -> Result<Config, Error> {
     match path {
-        Some(path) => Config::load(path).map_err(Into::into),
+        Some(path) => Config::load(path),
         None => Ok(Config::load_default()),
     }
 }
 
-fn get_spinner(quiet: bool) -> ProgressBar {
+pub fn get_spinner(quiet: bool) -> ProgressBar {
     if quiet {
         return ProgressBar::hidden();
     }

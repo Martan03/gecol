@@ -94,7 +94,6 @@
 //! - **Author website:** [martan03.github.io](https://martan03.github.io)
 
 mod cache;
-mod config;
 mod error;
 pub mod extract;
 pub mod prelude;
@@ -102,5 +101,4 @@ pub mod template;
 pub mod theme;
 
 pub use cache::Cache;
-pub use config::Config;
 pub use error::Error;

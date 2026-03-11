@@ -523,10 +523,13 @@ name = "gecol"
 version = "0.1.0"
 dependencies = [
  "clap 4.5.60",
+ "dirs",
  "gecol-core",
  "indicatif",
+ "serde",
  "termal",
  "thiserror",
+ "toml",
 ]
 
 [[package]]
@@ -536,7 +539,6 @@ dependencies = [
  "dirs",
  "image",
  "imgref",
- "indicatif",
  "kmeans_colors",
  "minijinja",
  "mss_saliency",

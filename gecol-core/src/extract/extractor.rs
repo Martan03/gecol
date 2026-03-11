@@ -2,88 +2,135 @@ use std::path::Path;
 
 use image::{DynamicImage, RgbImage, imageops::FilterType};
 use imgref::Img;
-use indicatif::{ProgressBar, ProgressStyle};
 use kmeans_colors::get_kmeans;
 use mss_saliency::maximum_symmetric_surround_saliency;
 use palette::{FromColor, Hsv, IntoColor, Lab, Srgb};
 
 use crate::{
     Cache,
-    config::Config,
     error::Error,
-    extract::scores::{ScoredCluster, ScoredPixel},
+    extract::{
+        ExtractionConfig, ExtractStep,
+        scores::{ScoredCluster, ScoredPixel},
+    },
 };
 
-/// Struct for extracting a color from an image.
+/// A utility for extracting accent color from an image.
 ///
-/// This struct is not meant for storing, but it only stores its state while
-/// extracting the color.
+/// This structs acts as a temporary state container during the extraction
+/// process and provides static methods for executing the extraction.
+///
+/// There are multiple extraction variants, mainly with
+/// ([`Extractor::extract`]) and without ([`Extractor::extract_cached`]) using
+/// the [`Cache`]. It is highly recommended using the [`Cache`]. High
+/// resolution images can take a while to just open, so thanks to the [`Cache`]
+/// the result for repeated extraction will be pretty much instant.
+///
+/// You can also use variant with progress reporting
+/// ([`Extractor::extract_with_progress`] and
+/// [`Extractor::extract_cached_with_progress`]), which is useful for having
+/// a loading screen, for example.
 #[derive(Debug, Clone)]
 pub struct Extractor<'a> {
-    config: &'a Config,
+    config: &'a ExtractionConfig,
     width: usize,
     height: usize,
 }
 
 impl<'a> Extractor<'a> {
-    /// Extracts the accent color from image on the given path.
+    /// Extracts the accent color from the image at the given path.
     ///
-    /// When no sufficient color is found, it returns the set fallback color.
+    /// When no sufficient color is found, it returns `None`.
     pub fn extract<P>(
         path: P,
-        config: &'a Config,
+        config: &'a ExtractionConfig,
     ) -> Result<Option<(u8, u8, u8)>, Error>
     where
         P: AsRef<Path>,
     {
-        Self::extract_with_progress(path, config, &ProgressBar::hidden())
+        Self::inner_extract(path, config, |_| {})
     }
 
-    /// Extracts the accent color from image on the given path with the
-    /// progress reporting.
+    /// Extracts the accent color from the image at the given path and uses
+    /// the cache.
     ///
-    /// When no sufficient color is found, it returns the set fallback color.
-    pub fn extract_with_progress<P>(
+    /// It checks if the cache already contains the color for the given image,
+    /// otherwise it saves the extracted color into the cache.
+    ///
+    /// When no sufficient color is found, it returns `None`.
+    pub fn extract_cached<P>(
         path: P,
-        config: &'a Config,
-        spinner: &ProgressBar,
+        config: &'a ExtractionConfig,
+        cache_path: Option<&Path>,
     ) -> Result<Option<(u8, u8, u8)>, Error>
     where
         P: AsRef<Path>,
     {
-        if config.no_cache {
-            return Self::inner_extract(path, config, spinner);
-        }
+        Self::extract_cached_with_progress(path, config, cache_path, |_| {})
+    }
 
-        spinner.set_message("Checking cache...");
+    /// Extracts the accent color from the image at the given path with the
+    /// progress reporting.
+    ///
+    /// When no sufficient color is found, it returns `None`.
+    pub fn extract_with_progress<P, F>(
+        path: P,
+        config: &'a ExtractionConfig,
+        progress_callback: F,
+    ) -> Result<Option<(u8, u8, u8)>, Error>
+    where
+        P: AsRef<Path>,
+        F: FnMut(ExtractStep),
+    {
+        Self::inner_extract(path, config, progress_callback)
+    }
+
+    /// Extracts the accent color from the image at the given path with the
+    /// progress reporting and uses the cache.
+    ///
+    /// It checks if the cache already contains the color for the given image,
+    /// otherwise it saves the extracted color into the cache.
+    ///
+    /// When no sufficient color is found, it returns `None`.
+    pub fn extract_cached_with_progress<P, F>(
+        path: P,
+        config: &'a ExtractionConfig,
+        cache_path: Option<&Path>,
+        mut progress_callback: F,
+    ) -> Result<Option<(u8, u8, u8)>, Error>
+    where
+        P: AsRef<Path>,
+        F: FnMut(ExtractStep),
+    {
+        progress_callback(ExtractStep::CheckingCache);
         let cache_file =
-            config.cache_dir.to_owned().unwrap_or_else(Cache::file);
+            cache_path.map(|v| v.to_owned()).unwrap_or_else(Cache::file);
         let mut cache = Cache::load(&cache_file);
         let key = Cache::key(config, path.as_ref())
             .unwrap_or("fallback".to_string());
 
         if let Some(&color) = cache.entries.get(&key) {
-            spinner.finish_with_message("Color loaded from cache!");
+            progress_callback(ExtractStep::FinishedWithCache);
             return Ok(Some(color));
         }
 
-        let color = Self::inner_extract(path, config, spinner)?;
+        let color = Self::inner_extract(path, config, progress_callback)?;
         if let Some(col) = color {
             cache.entries.insert(key, col);
             _ = cache.save(&cache_file);
         }
 
-        spinner.finish_with_message("Color extracted!");
         Ok(color)
     }
 
-    fn inner_extract<P>(
+    fn inner_extract<P, F>(
         path: P,
-        config: &'a Config,
-        spinner: &ProgressBar,
+        config: &'a ExtractionConfig,
+        mut progress_callback: F,
     ) -> Result<Option<(u8, u8, u8)>, Error>
     where
         P: AsRef<Path>,
+        F: FnMut(ExtractStep),
     {
         let mut extractor = Self {
             config,
@@ -91,12 +138,12 @@ impl<'a> Extractor<'a> {
             height: 0,
         };
 
-        spinner.set_message("Decoding image...");
+        progress_callback(ExtractStep::OpeningImage);
         let img = image::open(path)?;
-        spinner.set_message("Resizing image...");
+        progress_callback(ExtractStep::ResizingImage);
         let img = extractor.prep_img(img);
 
-        spinner.set_message("Extracting perception-aware colors...");
+        progress_callback(ExtractStep::ExtractingColors);
         let (sal_map, is_sal_worth) = extractor.gen_saliency(&img);
         #[cfg(debug_assertions)]
         extractor.save_saliency(&sal_map);
@@ -105,15 +152,10 @@ impl<'a> Extractor<'a> {
 
         let candids =
             extractor.get_candidates(&rgb_img, &sal_map, is_sal_worth);
-        let col = extractor
-            .get_best_col(candids)
-            .or_else(|| config.fallback_color());
 
-        if col.is_some() {
-            spinner.finish_with_message("Color extracted!");
-        } else {
-            Self::spinner_err(spinner, "Failed to extract sufficient color.");
-        }
+        progress_callback(ExtractStep::Clustering);
+        let col = extractor.get_best_col(candids);
+        progress_callback(ExtractStep::Finished);
         Ok(col)
     }
 
@@ -240,14 +282,6 @@ impl<'a> Extractor<'a> {
             clusters[cid as usize].push(&candids[i]);
         }
         clusters
-    }
-
-    fn spinner_err(spinner: &ProgressBar, msg: &str) {
-        spinner.set_style(
-            ProgressStyle::with_template("{prefix:.red} {msg}").unwrap(),
-        );
-        spinner.set_prefix("✗");
-        spinner.abandon_with_message(msg.to_owned());
     }
 
     #[cfg(debug_assertions)]
