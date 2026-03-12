@@ -8,9 +8,7 @@ pub enum Error {
     #[error(transparent)]
     Img(#[from] image::ImageError),
     #[error(transparent)]
-    TomlDe(#[from] toml::de::Error),
-    #[error(transparent)]
-    TomlSer(#[from] toml::ser::Error),
+    Postcard(#[from] postcard::Error),
     #[error(transparent)]
     MiniJinja(#[from] minijinja::Error),
     #[error("{0}")]

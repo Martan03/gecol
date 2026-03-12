@@ -6,6 +6,7 @@ description = "A perception-aware accent color extractor and dynamic theme gener
 keywords = ["color-extraction", "ricing", "template", "palette", "unixporn"]
 repository = "https://github.com/Martan03/gecol"
 readme = "README.md"
+license-file = "LICENSE"
 edition = "2024"
 
 [workspace]

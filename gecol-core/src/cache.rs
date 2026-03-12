@@ -44,8 +44,8 @@ impl Cache {
     where
         P: AsRef<Path>,
     {
-        match std::fs::read_to_string(file) {
-            Ok(content) => toml::from_str(&content).unwrap_or_default(),
+        match std::fs::read(file) {
+            Ok(bytes) => postcard::from_bytes(&bytes).unwrap_or_default(),
             Err(_) => Self::default(),
         }
     }
@@ -66,7 +66,8 @@ impl Cache {
         if let Some(parent) = file.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(file, toml::to_string(self)?)?;
+        let encoded = postcard::to_allocvec(self)?;
+        std::fs::write(file, encoded)?;
         Ok(())
     }
 
@@ -104,8 +105,8 @@ impl Cache {
     /// Gets the default cache file path.
     ///
     /// It uses the [`Cache::dir`] to get the cache directory, followed by the
-    /// `colors.toml`.
+    /// `colors.bin`.
     pub fn file() -> PathBuf {
-        Self::dir().join("color.toml")
+        Self::dir().join("colors.bin")
     }
 }

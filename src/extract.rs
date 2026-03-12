@@ -30,9 +30,7 @@ pub fn extract_color(
     };
 
     let color = color.or_else(|| config.fallback_color());
-    if color.is_some() {
-        spinner.finish_with_message("Color extracted!");
-    } else {
+    if !color.is_some() {
         spinner_err(&spinner, "Failed to extract sufficient color.");
     }
 
