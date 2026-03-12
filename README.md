@@ -141,5 +141,6 @@ and take inspiration.
 - **Author:** [Martan03](https://github.com/Martan03)
 - **GitHub repository:** [gecol](https://github.com/Martan03/gecol)
 - **Package**: [crates.io](https://crates.io/crates/gecol)
-- **Documentation**: [docs.rs](https://docs.rs/gecol/latest/gecol/)
+- **Crate**: [crates.io](https://crates.io/crates/gecol-core)
+- **Documentation**: [docs.rs](https://docs.rs/gecol-core/latest/gecol_core/)
 - **Author website:** [martan03.github.io](https://martan03.github.io)
