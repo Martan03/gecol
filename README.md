@@ -5,6 +5,9 @@ A perception-aware accent color extractor and dynamic theme generator.
 ## Table of Contents
 
 - [Installation](#installation)
+    - [Arch Linux](#arch-linux)
+    - [Cargo](#cargo)
+    - [Build from source](#build-from-source)
 - [Rust crate](#rust-crate)
 - [Usage](#usage)
 - [Configuration](#configuration)
@@ -13,15 +16,37 @@ A perception-aware accent color extractor and dynamic theme generator.
 
 ## Installation
 
-Currently, the primary way to install `gecol` is via the Rust toolchain (see
+### Arch Linux
+
+If you have Arch Linux, you can install `gecol` from
+[aur](https://aur.archlinux.org/packages/gecol). When using `yay`, you can do:
+
+```bash
+yay -S gecol
+```
+
+### Cargo
+
+Another way to install `gecol` is via the Rust toolchain (see
 [rust installation page](https://www.rust-lang.org/tools/install)). When you
 have the Rust Toolchain, you can install the project from source:
 
 ```bash
+cargo install gecol
+```
+
+### Build from source
+
+You can also build it directly from source. Similar to installing via `cargo`
+you need the Rust toolchain:
+
+```bash
 git clone https://github.com/Martan03/gecol
 cd gecol
-cargo install --path .
+cargo build -r
 ```
+
+The binary will be `./target/release/gecol`.
 
 ## Rust crate
 
@@ -38,19 +63,30 @@ the documentation at [docs.rs](https://docs.rs/gecol-core/latest/gecol-core/).
 
 ## Usage
 
-In order to build the templates (assuming you already configured it - more in
-[Configuration](#configuration) and [Templates](#templates) sections) with
-the theme created from the extracted color from the given image, you can run:
+`gecol` can extract a color from an image, or accept a raw hex color, to
+generate a dynamic theme and build your templates (more about them in
+[templates](#templates) section).
+
+Extract from a image and build templates:
 
 ```bash
 gecol run /path/to/image.jpg
 ```
 
-You can view all the usage options by displaying the help:
+Use a specific hex color instead of an image:
 
 ```bash
-gecol -h
+gecol run "#3acbaf"
 ```
+
+You can also skip building the templates and just preview the generated theme
+in your terminal:
+
+```bash
+gecol run /path/to/image.jpg --skip-build
+```
+
+You can view all available commands and options by running `gecol --help`.
 
 ## Configuration
 
