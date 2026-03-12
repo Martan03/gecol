@@ -2,7 +2,7 @@ use std::hash::Hash;
 
 use serde::{Deserialize, Serialize};
 
-/// Holds all the gecol configuration.
+/// Holds all the extraction configuration.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ExtractionConfig {
     // The width image to extract color from resizes to. If set to `None`, it
@@ -64,8 +64,7 @@ impl Default for ExtractionConfig {
 }
 
 impl Hash for ExtractionConfig {
-    /// Hashes the config state. It doesn't include the templates configuration
-    /// since it doesn't effect the actual extraction.
+    /// Hashes the config state.
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.res_w.hash(state);
         self.res_h.hash(state);

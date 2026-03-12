@@ -33,10 +33,10 @@
 //! # fn get_templates() -> HashMap<String, Template> { HashMap::new() }
 //!
 //! # fn main() -> Result<(), gecol_core::Error> {
-//! let config = Config::default();
+//! let config = ExtractionConfig::default();
 //!
 //! // 1. Extract the color from the given image
-//! if let Some(color) = Extractor::extract("/path/to/img.jpg", &config)? {
+//! if let Some(color) = Extractor::extract_cached("/path/img.jpg", &config, None)? {
 //!     // 2. Generate theme based on that color
 //!     let theme = Theme::dark(color);
 //!
@@ -65,25 +65,10 @@
 //!
 //! ## Configuration
 //!
-//! The [`Config`] struct allows fine-tuning of the extraction algorithm, such
-//! as saliency bonus, warmth bias and so on. You can read more about all the
-//! fine-tuning options in the [`Config`] documentation.
-//!
-//! The [`Config`] also contains the templates configuration. For each
-//! template, you specify the `source` path (path to the template file) and the
-//! `target` path (built template destination).
-//!
-//! If the `source` is not absolute path, it automatically searches in the
-//! `templates` directory, which by default is in `~/.config/gecol/templates`
-//! on linux. The `target` uses home directory when the path is not absolute.
-//!
-//! You can add a template to the configuration like this:
-//!
-//! ```toml
-//! [[template]]
-//! source = "some-config.json.template"
-//! target = "/home/user/.config/some-app/some-config.json"
-//! ```
+//! The [`ExtractionConfig`](crate::extract::ExtractionConfig) struct allows
+//! fine-tuning of the extraction algorithm, such as saliency bonus, warmth
+//! bias and so on. You can read more about all the fine-tuning options in the
+//! [`ExtractionConfig`](crate::extract::ExtractionConfig) documentation.
 //!
 //! ## Links
 //!

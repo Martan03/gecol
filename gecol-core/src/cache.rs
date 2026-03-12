@@ -8,6 +8,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Error, extract::ExtractionConfig};
 
+/// Allows caching extraction results.
+///
+/// Using cache improves performance a lot, so it is recommended to use. First
+/// time you extract color from the image, it can take a bit longer, since just
+/// opening a high resolution image takes a bit of time. To improve this, the
+/// extracted color is stored in the cache (when used), so the next time you
+/// want to extract color from the same image, it is pretty much instant.
+///
+/// # Usage
+///
+/// Generaly you don't need to use the cache directly, you can use the specific
+/// [`Extractor`](crate::extract::Extractor) methods:
+/// - [`Extractor::extract_cached`](crate::extract::Extractor::extract_cached)
+/// - [`Extractor::extract_cached_with_progress](crate::extract::Extractor::extract_cached_with_progress)
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Cache {
     pub entries: HashMap<String, (u8, u8, u8)>,
