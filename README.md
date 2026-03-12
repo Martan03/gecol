@@ -2,6 +2,8 @@
 
 A perception-aware accent color extractor and dynamic theme generator.
 
+https://github.com/user-attachments/assets/6894b110-8065-4473-acb5-c651278ac580
+
 ## Table of Contents
 
 - [Installation](#installation)
